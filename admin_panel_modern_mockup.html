@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - ATS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #f5f7fa;
+            color: #1f3650;
+            line-height: 1.5;
+        }
+
+        .app-main {
+            background: #f5f7fa;
+            padding: 24px;
+        }
+
+        .admin-dashboard-container {
+            max-width: 1680px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .admin-shell {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 28px;
+            height: calc(100vh - 120px);
+            min-height: 600px;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            background: white;
+            border-radius: 14px;
+            padding: 28px 20px;
+            box-shadow: 0 2px 8px rgba(45, 86, 137, 0.06);
+            overflow-y: auto;
+            border: 1px solid rgba(45, 86, 137, 0.08);
+        }
+
+        .admin-sidebar h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d5689;
+            margin-bottom: 28px;
+            letter-spacing: -0.3px;
+        }
+
+        .admin-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .admin-nav-button {
+            width: 100%;
+            padding: 12px 14px;
+            border: none;
+            background: transparent;
+            color: #335878;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .admin-nav-button:hover {
+            background: #f0f4f8;
+            color: #2d5689;
+        }
+
+        .admin-nav-button.active {
+            background: linear-gradient(135deg, #2d5689 0%, #244d80 100%);
+            color: white;
+            font-weight: 700;
+        }
+
+        /* Main Workspace */
+        .admin-workspace {
+            background: white;
+            border-radius: 14px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(45, 86, 137, 0.06);
+            overflow: hidden auto;
+            border: 1px solid rgba(45, 86, 137, 0.08);
+            position: relative;
+        }
+
+        .admin-refresh-button {
+            position: sticky;
+            top: 0;
+            float: right;
+            z-index: 5;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(45, 86, 137, 0.12);
+            border-radius: 8px;
+            background: white;
+            color: #2d5689;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .admin-refresh-button:hover {
+            background: #f0f4f8;
+            border-color: #2d5689;
+            transform: rotate(180deg);
+        }
+
+        .admin-refresh-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .admin-section h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #2d5689;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .admin-section h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #244d80;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* Grid and Cards */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .metric-card,
+        .admin-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid rgba(45, 86, 137, 0.08);
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #fafbfc 0%, #f5f7fa 100%);
+        }
+
+        .metric-card:hover {
+            border-color: rgba(45, 86, 137, 0.16);
+            box-shadow: 0 4px 12px rgba(45, 86, 137, 0.08);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #51677a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2d5689;
+            letter-spacing: -1px;
+        }
+
+        .admin-card {
+            margin-bottom: 20px;
+        }
+
+        #section-permissions .admin-card {
+            overflow: visible;
+        }
+
+        /* Forms */
+        .admin-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .admin-form.two-column {
+            grid-template-columns: 1fr 1fr auto;
+        }
+
+        .admin-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-field label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #244d80;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .admin-field input,
+        .admin-field select {
+            padding: 10px 12px;
+            border: 1px solid rgba(45, 86, 137, 0.12);
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
+
+        .admin-field input:focus,
+        .admin-field select:focus {
+            outline: none;
+            border-color: #2d5689;
+            box-shadow: 0 0 0 3px rgba(45, 86, 137, 0.1);
+        }
+
+        .admin-field select[multiple],
+        .admin-table select[multiple] {
+            min-height: 100px;
+            padding: 8px 10px;
+        }
+
+        /* Buttons */
+        .admin-btn {
+            min-height: 40px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2d5689 0%, #244d80 100%);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(45, 86, 137, 0.2);
+        }
+
+        .admin-btn:active {
+            transform: translateY(0);
+        }
+
+        .admin-btn.secondary {
+            background: white;
+            color: #2d5689;
+            border: 1.5px solid #2d5689;
+        }
+
+        .admin-btn.secondary:hover {
+            background: #f0f4f8;
+        }
+
+        .admin-btn.danger {
+            background: linear-gradient(135deg, #c62e42 0%, #b42335 100%);
+        }
+
+        .admin-btn.danger:hover {
+            box-shadow: 0 6px 16px rgba(198, 46, 66, 0.25);
+        }
+
+        .admin-btn.small {
+            min-height: 34px;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .admin-btn:disabled,
+        .admin-field input:disabled,
+        .admin-field select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Dropdown */
+        .user-check-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .user-check-button {
+            width: 100%;
+            min-height: 40px;
+            padding: 10px 12px;
+            border: 1px solid rgba(45, 86, 137, 0.12);
+            border-radius: 8px;
+            background: white;
+            color: #1f3650;
+            font: inherit;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .user-check-button:hover {
+            border-color: #2d5689;
+        }
+
+        .user-check-button::after {
+            content: "";
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            width: 6px;
+            height: 6px;
+            border-right: 2px solid #2d5689;
+            border-bottom: 2px solid #2d5689;
+            transform: translateY(-65%) rotate(45deg);
+            transition: all 0.2s ease;
+        }
+
+        .user-check-menu {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 6px);
+            z-index: 30;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 8px;
+            border: 1px solid rgba(45, 86, 137, 0.12);
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 10px 32px rgba(14, 34, 54, 0.15);
+        }
+
+        .user-check-menu.hidden {
+            display: none;
+        }
+
+        .user-check-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            color: #1f3650;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .user-check-option:hover {
+            background: #f0f4f8;
+        }
+
+        .user-check-option input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .user-check-empty {
+            padding: 12px 10px;
+            color: #51677a;
+            font-size: 13px;
+        }
+
+        /* Checkboxes */
+        .admin-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 40px;
+            color: #244d80;
+            font-weight: 600;
+        }
+
+        .admin-check input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Tables */
+        .admin-table-wrap {
+            border: 1px solid rgba(45, 86, 137, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 100%;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(45, 86, 137, 0.06);
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .admin-table th {
+            background: linear-gradient(135deg, #f5f7fa 0%, #eef3f6 100%);
+            font-size: 11px;
+            font-weight: 800;
+            color: #244d80;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .admin-table td {
+            font-size: 14px;
+            color: #1f3650;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #fafbfc;
+        }
+
+        .admin-table input,
+        .admin-table select {
+            padding: 8px 10px;
+            border: 1px solid rgba(45, 86, 137, 0.12);
+            border-radius: 6px;
+            background: white;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .admin-table input:focus,
+        .admin-table select:focus {
+            outline: none;
+            border-color: #2d5689;
+            box-shadow: 0 0 0 2px rgba(45, 86, 137, 0.1);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Pills */
+        .role-pill,
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            background: linear-gradient(135deg, #d6e4f3 0%, #cfe1f0 100%);
+            color: #2d5689;
+        }
+
+        .status-pill.inactive {
+            background: linear-gradient(135deg, #f4d8dc 0%, #f0cfd5 100%);
+            color: #b42335;
+        }
+
+        /* Modal */
+        .profile-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(14, 34, 54, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        .profile-modal-backdrop.active {
+            display: flex;
+        }
+
+        .profile-modal {
+            width: min(620px, 100%);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 20px 60px rgba(14, 34, 54, 0.25);
+        }
+
+        .profile-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px;
+            border-bottom: 1px solid rgba(45, 86, 137, 0.08);
+            background: linear-gradient(135deg, #f5f7fa 0%, #eef3f6 100%);
+        }
+
+        .profile-modal-header h3 {
+            margin: 0;
+            color: #2d5689;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .profile-modal-body {
+            padding: 24px;
+        }
+
+        .profile-summary {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 18px;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #d6e4f3 0%, #cfe1f0 100%);
+            color: #2d5689;
+            font-size: 32px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            color: #2d5689;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .profile-email {
+            color: #51677a;
+            margin-top: 4px;
+            font-size: 14px;
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .profile-detail {
+            background: #fafbfc;
+            border: 1px solid rgba(45, 86, 137, 0.08);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .profile-detail-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #51677a;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 6px;
+        }
+
+        .profile-detail-value {
+            color: #1f3650;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Messages */
+        .admin-message {
+            display: none;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #e8f5f1;
+            color: #1a5e49;
+            font-weight: 600;
+            font-size: 14px;
+            border-left: 4px solid #27a377;
+        }
+
+        .admin-message.error {
+            background: #fdeaea;
+            color: #b42335;
+            border-left-color: #b42335;
+        }
+
+        /* Permissions */
+        .permission-toolbar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .permission-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+            overflow: visible;
+        }
+
+        .permission-item {
+            border: 1px solid rgba(45, 86, 137, 0.08);
+            border-radius: 10px;
+            background: white;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .permission-item:hover {
+            border-color: rgba(45, 86, 137, 0.16);
+            box-shadow: 0 4px 12px rgba(45, 86, 137, 0.08);
+        }
+
+        .permission-key {
+            color: #2d5689;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .permission-desc {
+            margin: 8px 0 12px;
+            color: #51677a;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .permission-item select {
+            width: 100%;
+            min-height: 38px;
+            padding: 8px 12px;
+            border: 1px solid rgba(45, 86, 137, 0.12);
+            border-radius: 6px;
+            background: white;
+            color: #1f3650;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .permission-item select:focus {
+            outline: none;
+            border-color: #2d5689;
+            box-shadow: 0 0 0 2px rgba(45, 86, 137, 0.1);
+        }
+
+        .monitor-table-wrap {
+            border: 1px solid rgba(45, 86, 137, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .monitor-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 100%;
+        }
+
+        .monitor-table th,
+        .monitor-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(45, 86, 137, 0.06);
+            text-align: left;
+        }
+
+        .monitor-table th {
+            background: linear-gradient(135deg, #f5f7fa 0%, #eef3f6 100%);
+            font-size: 11px;
+            font-weight: 800;
+            color: #244d80;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .monitor-table td {
+            font-size: 14px;
+            color: #1f3650;
+        }
+
+        .monitor-table tbody tr:hover {
+            background: #fafbfc;
+        }
+
+        .admin-profile-link {
+            color: #2d5689;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .admin-profile-link:hover {
+            color: #244d80;
+            text-decoration: underline;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(45, 86, 137, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(45, 86, 137, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .admin-shell {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                height: auto;
+            }
+
+            .admin-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .admin-form,
+            .admin-form.two-column,
+            .permission-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .permission-list {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-details {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-nav {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .admin-nav-button {
+                padding: 10px 8px;
+                font-size: 12px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-main">
+        <div class="admin-dashboard-container">
+            <div class="admin-shell">
+                <!-- Sidebar -->
+                <aside class="admin-sidebar">
+                    <h1>Admin Panel</h1>
+                    <nav class="admin-nav" aria-label="Admin panel sections">
+                        <button type="button" class="admin-nav-button active" data-section="overview">Overview</button>
+                        <button type="button" class="admin-nav-button" data-section="users">Users</button>
+                        <button type="button" class="admin-nav-button" data-section="permissions">Permissions</button>
+                        <button type="button" class="admin-nav-button" data-section="roles">Roles</button>
+                        <button type="button" class="admin-nav-button" data-section="positions">Positions</button>
+                    </nav>
+                </aside>
+
+                <!-- Main Workspace -->
+                <main class="admin-workspace">
+                    <button type="button" class="admin-refresh-button" aria-label="Refresh">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 0 1-15.3 6.4"></path>
+                            <path d="M3 12A9 9 0 0 1 18.3 5.6"></path>
+                            <path d="M18 2v4h-4"></path>
+                            <path d="M6 22v-4h4"></path>
+                        </svg>
+                    </button>
+
+                    <div class="admin-message" id="adminMessage"></div>
+
+                    <!-- Overview Section -->
+                    <section class="admin-section active" id="section-overview">
+                        <h2>Overview</h2>
+                        <div class="admin-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">Total Users</div>
+                                <div class="metric-value">24</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Active Users</div>
+                                <div class="metric-value">18</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Roles</div>
+                                <div class="metric-value">4</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Positions</div>
+                                <div class="metric-value">12</div>
+                            </div>
+                        </div>
+
+                        <div class="admin-card">
+                            <h3>Active User Monitoring</h3>
+                            <div class="monitor-table-wrap">
+                                <table class="monitor-table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Role</th>
+                                            <th>Active Timer</th>
+                                            <th>Login Timestamp</th>
+                                            <th>Recent Timestamp</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><a class="admin-profile-link" href="#">john.smith</a></td>
+                                            <td><span class="role-pill">ADMIN</span></td>
+                                            <td>02:34:18</td>
+                                            <td>5/19/2026, 9:22 AM</td>
+                                            <td>5/19/2026, 11:56 AM</td>
+                                            <td><span class="status-pill">Monitoring</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><a class="admin-profile-link" href="#">sarah.j</a></td>
+                                            <td><span class="role-pill">LEVEL_2_USER</span></td>
+                                            <td>01:45:22</td>
+                                            <td>5/19/2026, 10:10 AM</td>
+                                            <td>5/19/2026, 11:55 AM</td>
+                                            <td><button class="admin-btn small danger">Remote Log Out</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Users Section -->
+                    <section class="admin-section" id="section-users">
+                        <h2>Users</h2>
+                        <div class="admin-card">
+                            <h3>Add User</h3>
+                            <form class="admin-form">
+                                <div class="admin-field">
+                                    <label>Username</label>
+                                    <input type="text" placeholder="Enter username">
+                                </div>
+                                <div class="admin-field">
+                                    <label>Email</label>
+                                    <input type="email" placeholder="user@example.com">
+                                </div>
+                                <div class="admin-field">
+                                    <label>Initial Password</label>
+                                    <input type="password" placeholder="Min 8 characters">
+                                </div>
+                                <div class="admin-field">
+                                    <label>Role</label>
+                                    <select>
+                                        <option>Select role</option>
+                                        <option>LEVEL_1_USER</option>
+                                        <option>LEVEL_2_USER</option>
+                                        <option>ADMIN</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="admin-btn">Add User</button>
+                            </form>
+                        </div>
+
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" value="john.smith" style="width: 100%;"></td>
+                                        <td><input type="email" value="john@company.com" style="width: 100%;"></td>
+                                        <td><span class="role-pill">ADMIN</span></td>
+                                        <td><label class="admin-check"><input type="checkbox" checked> Active</label></td>
+                                        <td>5/18/2026, 2:14 PM</td>
+                                        <td>
+                                            <div class="admin-actions">
+                                                <button class="admin-btn small secondary">Profile</button>
+                                                <button class="admin-btn small">Save</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" value="sarah.j" style="width: 100%;"></td>
+                                        <td><input type="email" value="sarah@company.com" style="width: 100%;"></td>
+                                        <td><span class="role-pill">LEVEL_2_USER</span></td>
+                                        <td><label class="admin-check"><input type="checkbox" checked> Active</label></td>
+                                        <td>5/19/2026, 9:30 AM</td>
+                                        <td>
+                                            <div class="admin-actions">
+                                                <button class="admin-btn small secondary">Profile</button>
+                                                <button class="admin-btn small">Save</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Permissions Section -->
+                    <section class="admin-section" id="section-permissions">
+                        <h2>User Permissions</h2>
+                        <div class="admin-card">
+                            <div class="permission-toolbar">
+                                <div class="admin-field">
+                                    <label>Select User</label>
+                                    <select>
+                                        <option>john.smith (ADMIN)</option>
+                                        <option>sarah.j (LEVEL_2_USER)</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="admin-btn">Save Permissions</button>
+                            </div>
+
+                            <div class="permission-list">
+                                <div class="permission-item">
+                                    <div class="permission-key">view_users</div>
+                                    <div class="permission-desc">User Management - View all users in system</div>
+                                    <select>
+                                        <option>Inherit role default</option>
+                                        <option selected>Allow for this user</option>
+                                        <option>Deny for this user</option>
+                                    </select>
+                                </div>
+                                <div class="permission-item">
+                                    <div class="permission-key">manage_users</div>
+                                    <div class="permission-desc">User Management - Create/edit users</div>
+                                    <select>
+                                        <option>Inherit role default</option>
+                                        <option selected>Allow for this user</option>
+                                        <option>Deny for this user</option>
+                                    </select>
+                                </div>
+                                <div class="permission-item">
+                                    <div class="permission-key">view_positions</div>
+                                    <div class="permission-desc">Positions - View all positions</div>
+                                    <select>
+                                        <option selected>Inherit role default</option>
+                                        <option>Allow for this user</option>
+                                        <option>Deny for this user</option>
+                                    </select>
+                                </div>
+                                <div class="permission-item">
+                                    <div class="permission-key">manage_positions</div>
+                                    <div class="permission-desc">Positions - Create/edit positions</div>
+                                    <select>
+                                        <option selected>Inherit role default</option>
+                                        <option>Allow for this user</option>
+                                        <option>Deny for this user</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Roles Section -->
+                    <section class="admin-section" id="section-roles">
+                        <h2>User Roles</h2>
+                        <div class="admin-card">
+                            <h3>Change User Roles</h3>
+                            <div class="admin-table-wrap">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Current Role</th>
+                                            <th>New Role</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>john.smith</strong><br><small>john@company.com</small></td>
+                                            <td><span class="role-pill">ADMIN</span></td>
+                                            <td>
+                                                <select>
+                                                    <option>LEVEL_1_USER</option>
+                                                    <option selected>ADMIN</option>
+                                                </select>
+                                            </td>
+                                            <td><span class="status-pill">Current account</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>sarah.j</strong><br><small>sarah@company.com</small></td>
+                                            <td><span class="role-pill">LEVEL_2_USER</span></td>
+                                            <td>
+                                                <select>
+                                                    <option>LEVEL_1_USER</option>
+                                                    <option selected>LEVEL_2_USER</option>
+                                                    <option>ADMIN</option>
+                                                </select>
+                                            </td>
+                                            <td><button class="admin-btn small">Change Role</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Positions Section -->
+                    <section class="admin-section" id="section-positions">
+                        <h2>Applicant Positions</h2>
+                        <div class="admin-card">
+                            <h3>Add Position</h3>
+                            <form class="admin-form two-column">
+                                <div class="admin-field">
+                                    <label>Position Title</label>
+                                    <input type="text" placeholder="e.g., Software Engineer">
+                                </div>
+                                <div class="admin-field">
+                                    <label>Assign To Users</label>
+                                    <div class="user-check-dropdown">
+                                        <button type="button" class="user-check-button">Unassigned</button>
+                                        <div class="user-check-menu hidden" id="positionUserMenu">
+                                            <label class="user-check-option">
+                                                <input type="checkbox" value="1">
+                                                <span>john.smith (ADMIN)</span>
+                                            </label>
+                                            <label class="user-check-option">
+                                                <input type="checkbox" value="2">
+                                                <span>sarah.j (LEVEL_2_USER)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="admin-btn">Add Position</button>
+                            </form>
+                        </div>
+
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Position</th>
+                                        <th>Status</th>
+                                        <th>Assigned Users</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" value="Senior Developer" style="width: 100%;"></td>
+                                        <td><label class="admin-check"><input type="checkbox" checked> Active</label></td>
+                                        <td>2 users selected</td>
+                                        <td>
+                                            <div class="admin-actions">
+                                                <button class="admin-btn small">Save</button>
+                                                <button class="admin-btn small danger">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" value="Product Manager" style="width: 100%;"></td>
+                                        <td><label class="admin-check"><input type="checkbox" checked> Active</label></td>
+                                        <td>1 user selected</td>
+                                        <td>
+                                            <div class="admin-actions">
+                                                <button class="admin-btn small">Save</button>
+                                                <button class="admin-btn small danger">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple navigation functionality for the mockup
+        document.querySelectorAll('[data-section]').forEach(button => {
+            button.addEventListener('click', function() {
+                const section = this.dataset.section;
+
+                // Update active button
+                document.querySelectorAll('[data-section]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // Show active section
+                document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`section-${section}`).classList.add('active');
+            });
+        });
+
+        // Dropdown toggle
+        document.addEventListener('click', function(e) {
+            const dropdownToggle = e.target.closest('.user-check-button');
+            if (dropdownToggle) {
+                const menu = dropdownToggle.nextElementSibling;
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                    e.stopPropagation();
+                }
+            } else {
+                document.querySelectorAll('.user-check-menu').forEach(menu => menu.classList.add('hidden'));
+            }
+        });
+
+        // Update dropdown button text when checkboxes change
+        document.addEventListener('change', function(e) {
+            if (e.target.closest('.user-check-option input')) {
+                const dropdown = e.target.closest('.user-check-dropdown');
+                const button = dropdown.querySelector('.user-check-button');
+                const checked = Array.from(dropdown.querySelectorAll('input[type="checkbox"]:checked'));
+
+                if (checked.length === 0) {
+                    button.textContent = 'Unassigned';
+                } else if (checked.length <= 2) {
+                    button.textContent = checked.map(cb => cb.nextElementSibling.textContent).join(', ');
+                } else {
+                    button.textContent = `${checked.length} users selected`;
+                }
+            }
+        });
+
+        // Refresh button rotation
+        document.querySelector('.admin-refresh-button').addEventListener('click', function() {
+            this.style.animation = 'none';
+            setTimeout(() => {
+                this.style.animation = 'spin 0.6s ease-in-out';
+            }, 10);
+        });
+
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

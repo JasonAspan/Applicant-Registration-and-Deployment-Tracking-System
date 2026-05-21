@@ -1,0 +1,1 @@
+Save your company logo image as `static/img/company-logo.png` (PNG format), then refresh the employee dashboard.

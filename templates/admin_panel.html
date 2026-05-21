@@ -1,0 +1,1799 @@
+{% extends "base_employee.html" %}
+
+{% block title %}Admin Panel - ATS{% endblock %}
+
+{% block container_class %}admin-dashboard-container{% endblock %}
+
+{% block extra_css %}
+<style>
+  .app-main {
+    background: #f7f7f7;
+    padding: 18px;
+  }
+
+  .admin-dashboard-container {
+    max-width: 1680px;
+    width: calc(100vw - 32px);
+    background: transparent;
+  }
+
+  .admin-shell {
+    height: calc(100vh - 150px);
+    min-height: 585px;
+    max-height: 720px;
+    padding: 20px;
+    border-radius: 38px;
+    background: #2d5689;
+    display: grid;
+    grid-template-columns: 226px minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .admin-sidebar {
+    min-height: 0;
+    padding: 16px 14px;
+    border-radius: 10px;
+    background: #eef3f6;
+    overflow-y: auto;
+  }
+
+  .admin-sidebar h1 {
+    margin: 0 0 26px;
+    color: #244d80;
+    font-size: 29px;
+    font-weight: 800;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .admin-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .admin-nav-button {
+    width: 100%;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: #244d80;
+    font: inherit;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .admin-nav-button.active,
+  .admin-nav-button:hover {
+    color: #102f55;
+    text-decoration: underline;
+  }
+
+  .admin-workspace {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px 26px;
+    border-radius: 10px;
+    background: #bdcbda;
+    overflow: hidden auto;
+  }
+
+  .admin-refresh-button {
+    position: sticky;
+    top: 0;
+    float: right;
+    z-index: 4;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #8ba0b4;
+    border-radius: 7px;
+    background: #eef3f6;
+    color: #244d80;
+    cursor: pointer;
+  }
+
+  .admin-refresh-button:hover {
+    background: #ffffff;
+  }
+
+  .admin-refresh-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .admin-section {
+    display: none;
+  }
+
+  .admin-section.active {
+    display: block;
+  }
+
+  .admin-section h2 {
+    margin: 0 0 18px;
+    color: #173b62;
+    font-size: 28px;
+    text-align: left;
+  }
+
+  .admin-section h3 {
+    margin: 0 0 12px;
+    color: #173b62;
+    font-size: 20px;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .metric-card,
+  .admin-card {
+    border: 1px solid #9aabba;
+    border-radius: 8px;
+    background: #f7fafc;
+    padding: 16px;
+  }
+
+  #section-permissions .admin-card {
+    overflow: visible;
+  }
+
+  .metric-label {
+    color: #335878;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .metric-value {
+    margin-top: 8px;
+    color: #173b62;
+    font-size: 30px;
+    font-weight: 800;
+  }
+
+  .admin-form {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(140px, 1fr));
+    gap: 12px;
+    align-items: end;
+  }
+
+  .admin-form.two-column {
+    grid-template-columns: 1fr 1fr auto;
+  }
+
+  .admin-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #173b62;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .admin-field input,
+  .admin-field select,
+  .admin-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #7f93a8;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 14px;
+  }
+
+  .admin-field input,
+  .admin-field select {
+    height: 40px;
+  }
+
+  .admin-field textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.45;
+  }
+
+  .admin-form.announcement-form {
+    grid-template-columns: minmax(180px, 0.35fr) minmax(280px, 1fr) auto;
+  }
+
+  .admin-field select[multiple],
+  .admin-table select[multiple] {
+    height: 96px;
+    padding: 6px 8px;
+  }
+
+  .announcement-admin-title {
+    max-width: 260px;
+    font-weight: 800;
+    color: #173b62;
+  }
+
+  .announcement-admin-message {
+    max-width: 620px;
+    white-space: pre-wrap;
+  }
+
+  .user-check-dropdown {
+    position: relative;
+    width: 100%;
+  }
+
+  .user-check-button {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 34px 8px 10px;
+    border: 1px solid #7f93a8;
+    border-radius: 4px;
+    background: #fff;
+    color: #1f3650;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .user-check-button::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #244d80;
+    border-bottom: 2px solid #244d80;
+    transform: translateY(-65%) rotate(45deg);
+  }
+
+  .user-check-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 30;
+    max-height: 210px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid #7f93a8;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 12px 26px rgba(23, 59, 98, 0.22);
+  }
+
+  .user-check-menu.hidden {
+    display: none;
+  }
+
+  .user-check-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 4px;
+    color: #1f3650;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .user-check-option:hover {
+    background: #eef3f6;
+  }
+
+  .user-check-option input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+  }
+
+  .user-check-empty {
+    padding: 7px 8px;
+    color: #51677a;
+    font-size: 13px;
+  }
+
+  .admin-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    color: #173b62;
+    font-weight: 700;
+  }
+
+  .admin-check input {
+    width: 18px;
+    height: 18px;
+  }
+
+  .admin-btn {
+    min-height: 40px;
+    padding: 9px 13px;
+    border: 0;
+    border-radius: 5px;
+    background: #244d80;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .admin-btn:hover {
+    background: #173b62;
+    color: white;
+    text-decoration: none;
+  }
+
+  .admin-btn:disabled,
+  .admin-field input:disabled,
+  .admin-field select:disabled,
+  .admin-table input:disabled,
+  .admin-table select:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .admin-btn.secondary {
+    background: #eef3f6;
+    color: #244d80;
+    border: 1px solid #9aabba;
+  }
+
+  .admin-btn.danger {
+    background: #b42335;
+  }
+
+  .admin-btn.small {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .admin-table-wrap {
+    margin-top: 16px;
+    overflow-x: auto;
+    border: 1px solid #9aabba;
+    border-radius: 8px;
+    background: white;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 980px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #d8e1ea;
+    color: #1f3650;
+    font-size: 14px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .admin-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #eef3f6;
+    color: #173b62;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .admin-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .role-pill,
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #dce8f3;
+    color: #173b62;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .status-pill.inactive {
+    background: #f2d7dc;
+    color: #842032;
+  }
+
+  .profile-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(14, 34, 54, 0.58);
+  }
+
+  .profile-modal-backdrop.active {
+    display: flex;
+  }
+
+  .profile-modal {
+    width: min(620px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    border-radius: 10px;
+    background: #f7fafc;
+    box-shadow: 0 22px 60px rgba(14, 34, 54, 0.32);
+  }
+
+  .profile-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #d8e1ea;
+    background: #eef3f6;
+  }
+
+  .profile-modal-header h3 {
+    margin: 0;
+    color: #173b62;
+    font-size: 21px;
+  }
+
+  .profile-modal-body {
+    padding: 20px;
+  }
+
+  .profile-summary {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .profile-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: #dce8f3;
+    color: #173b62;
+    font-size: 34px;
+    font-weight: 800;
+  }
+
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-name {
+    color: #173b62;
+    font-size: 24px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-email {
+    margin-top: 4px;
+    color: #51677a;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .profile-detail {
+    border: 1px solid #d8e1ea;
+    border-radius: 8px;
+    background: #fff;
+    padding: 11px 12px;
+  }
+
+  .profile-detail-label {
+    color: #51677a;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .profile-detail-value {
+    margin-top: 5px;
+    color: #1f3650;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-message {
+    display: none;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #e8f5ee;
+    color: #14532d;
+    font-weight: 700;
+  }
+
+  .admin-message.error {
+    background: #fde8ec;
+    color: #842032;
+  }
+
+  .permission-toolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 360px) auto;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+
+  .permission-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+    gap: 12px;
+    overflow: visible;
+  }
+
+  .monitor-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #9aabba;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .monitor-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+  }
+
+  .monitor-table th,
+  .monitor-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #d8e1ea;
+    color: #1f3650;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .monitor-table th {
+    background: #eef3f6;
+    color: #173b62;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .admin-profile-link {
+    color: #173b62;
+    font-weight: 800;
+    text-decoration: underline;
+  }
+
+  .admin-profile-link:hover {
+    color: #0d2746;
+  }
+
+  .permission-item {
+    border: 1px solid #9aabba;
+    border-radius: 8px;
+    background: #f7fafc;
+    padding: 12px;
+    overflow: visible;
+  }
+
+  .permission-key {
+    color: #173b62;
+    font-weight: 800;
+  }
+
+  .permission-desc {
+    margin: 5px 0 10px;
+    color: #51677a;
+    font-size: 12px;
+  }
+
+  .permission-item select {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: 1px solid #7f93a8;
+    border-radius: 4px;
+    background: white;
+    color: #111827;
+    font-size: 15px;
+    line-height: 1.3;
+    overflow: visible;
+  }
+
+  .permission-item option {
+    color: #111827;
+    background: #ffffff;
+    font-size: 15px;
+  }
+
+  @media (max-width: 900px) {
+    .admin-shell {
+      height: auto;
+      max-height: none;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      border-radius: 24px;
+    }
+
+    .admin-sidebar {
+      min-height: auto;
+    }
+
+    .admin-nav {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-workspace {
+      max-height: 620px;
+    }
+
+    .admin-grid,
+    .admin-form,
+    .admin-form.two-column,
+    .admin-form.announcement-form,
+    .permission-toolbar {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <h1>Admin Panel</h1>
+    <nav class="admin-nav" aria-label="Admin panel sections">
+      <button type="button" class="admin-nav-button active" data-section="overview">Overview</button>
+      <button type="button" class="admin-nav-button" data-section="users">Users</button>
+      <button type="button" class="admin-nav-button" data-section="permissions">User Permissions</button>
+      <button type="button" class="admin-nav-button" data-section="roles">User Roles</button>
+      <button type="button" class="admin-nav-button" data-section="positions">Applicant Positions</button>
+      <button type="button" class="admin-nav-button" data-section="announcements">Announcements</button>
+    </nav>
+  </aside>
+
+  <main class="admin-workspace">
+    <button type="button" class="admin-refresh-button" id="refreshAdminPanel" aria-label="Refresh current list" title="Refresh current list">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 0 1-15.3 6.4"></path>
+        <path d="M3 12A9 9 0 0 1 18.3 5.6"></path>
+        <path d="M18 2v4h-4"></path>
+        <path d="M6 22v-4h4"></path>
+      </svg>
+    </button>
+    <div class="admin-message" id="adminMessage"></div>
+
+    <section class="admin-section active" id="section-overview">
+      <h2>Overview</h2>
+      <div class="admin-grid">
+        <div class="metric-card">
+          <div class="metric-label">Total Users</div>
+          <div class="metric-value" id="metricUsers">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Active Users</div>
+          <div class="metric-value" id="metricActiveUsers">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Roles</div>
+          <div class="metric-value" id="metricRoles">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Positions</div>
+          <div class="metric-value" id="metricPositions">0</div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <h3>Active User Monitoring</h3>
+        <div class="monitor-table-wrap">
+          <table class="monitor-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Active Timer</th>
+                <th>Login Timestamp</th>
+                <th>Recent Timestamp</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="activeSessionsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-section" id="section-users">
+      <h2>Users</h2>
+      <div class="admin-card">
+        <h3>Add User</h3>
+        <form class="admin-form" id="createUserForm">
+          <div class="admin-field">
+            <label for="newUsername">Username</label>
+            <input type="text" id="newUsername" required>
+          </div>
+          <div class="admin-field">
+            <label for="newEmail">Email</label>
+            <input type="email" id="newEmail">
+          </div>
+          <div class="admin-field">
+            <label for="newPassword">Initial Password</label>
+            <input type="password" id="newPassword" minlength="8" required>
+          </div>
+          <div class="admin-field">
+            <label for="newRole">Role</label>
+            <select id="newRole" required></select>
+          </div>
+          <button type="submit" class="admin-btn">Add User</button>
+        </form>
+      </div>
+      <div class="admin-card">
+        <h3>Change User Password</h3>
+        <form class="admin-form" id="changeUserPasswordForm">
+          <div class="admin-field">
+            <label for="passwordUserSelect">User</label>
+            <select id="passwordUserSelect" required></select>
+          </div>
+          <div class="admin-field">
+            <label for="adminNewPassword">New Password</label>
+            <input type="password" id="adminNewPassword" minlength="8" autocomplete="new-password" required>
+          </div>
+          <div class="admin-field">
+            <label for="adminConfirmPassword">Confirm Password</label>
+            <input type="password" id="adminConfirmPassword" minlength="8" autocomplete="new-password" required>
+          </div>
+          <label class="admin-check">
+            <input type="checkbox" id="forceUserPasswordReset" checked>
+            Require reset
+          </label>
+          <button type="submit" class="admin-btn">Change Password</button>
+        </form>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section" id="section-permissions">
+      <h2>User Permissions</h2>
+      <div class="admin-card">
+        <div class="permission-toolbar">
+          <div class="admin-field">
+            <label for="permissionUserSelect">Select User</label>
+            <select id="permissionUserSelect"></select>
+          </div>
+          <button type="button" class="admin-btn" id="savePermissionsButton">Save Permissions</button>
+        </div>
+        <div id="permissionList" class="permission-list"></div>
+      </div>
+    </section>
+
+    <section class="admin-section" id="section-roles">
+      <h2>User Roles</h2>
+      <div class="admin-card">
+        <h3>Change User Roles</h3>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Current Role</th>
+                <th>New Role</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="rolesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-section" id="section-positions">
+      <h2>Applicant Positions</h2>
+      <div class="admin-card">
+        <h3>Add Position</h3>
+        <form class="admin-form two-column" id="createPositionForm">
+          <div class="admin-field">
+            <label for="newPositionTitle">Position Title</label>
+            <input type="text" id="newPositionTitle" required>
+          </div>
+          <div class="admin-field">
+            <label for="newPositionUser">Assign To Users Later or Now</label>
+            <div class="user-check-dropdown" id="newPositionUser" data-user-checkbox-dropdown></div>
+          </div>
+          <button type="submit" class="admin-btn">Add Position</button>
+        </form>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>Status</th>
+              <th>Assigned Users</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="positionsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section" id="section-announcements">
+      <h2>Announcements</h2>
+      {% if current_user.role_obj and current_user.role_obj.name == 'SUPER_ADMIN' %}
+      <div class="admin-card">
+        <h3>Compose Announcement</h3>
+        <form class="admin-form announcement-form" id="createAnnouncementForm">
+          <div class="admin-field">
+            <label for="announcementTitle">Title</label>
+            <input type="text" id="announcementTitle" maxlength="120" required>
+          </div>
+          <div class="admin-field">
+            <label for="announcementMessage">Message</label>
+            <textarea id="announcementMessage" maxlength="2000" required></textarea>
+          </div>
+          <button type="submit" class="admin-btn">Publish</button>
+        </form>
+      </div>
+      {% else %}
+      <div class="admin-card">
+        <h3>Announcements</h3>
+        <p>Only SUPERADMIN accounts can compose announcements.</p>
+      </div>
+      {% endif %}
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Message</th>
+              <th>Published By</th>
+              <th>Published</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="announcementsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="profile-modal-backdrop" id="userProfileModal" role="dialog" aria-modal="true" aria-labelledby="userProfileTitle">
+  <div class="profile-modal">
+    <div class="profile-modal-header">
+      <h3 id="userProfileTitle">User Profile</h3>
+      <button type="button" class="admin-btn small secondary" data-close-profile>Close</button>
+    </div>
+    <div class="profile-modal-body" id="userProfileContent">
+      <div class="profile-detail">Loading profile...</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const API_BASE = '/api';
+  const CSRF_TOKEN = '{{ csrf_token() }}';
+  const currentUserId = {{ current_user.id }};
+  const canViewUsers = {{ 'true' if has_permission(current_user, 'view_users') else 'false' }};
+  const canManageUsers = {{ 'true' if has_permission(current_user, 'manage_users') else 'false' }};
+  const canManagePermissions = {{ 'true' if has_permission(current_user, 'manage_permissions') else 'false' }};
+  const canViewPositions = {{ 'true' if has_permission(current_user, 'view_positions') else 'false' }};
+  const canManagePositions = {{ 'true' if has_permission(current_user, 'manage_positions') else 'false' }};
+  const isSuperAdmin = {{ 'true' if current_user.role_obj and current_user.role_obj.name == 'SUPER_ADMIN' else 'false' }};
+  const roleOrder = ['LEVEL_1_USER', 'LEVEL_2_USER', 'ADMIN', 'SUPER_ADMIN'];
+  let users = [];
+  let roles = [];
+  let permissionsByCategory = {};
+  let positions = [];
+  let announcements = [];
+  let activeSessions = [];
+  let monitorTimer = null;
+  let selectedPermissionUserId = null;
+  let currentSection = 'overview';
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
+
+  async function apiFetch(url, options = {}) {
+    const response = await fetch(url, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN, ...(options.headers || {}) }
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || data.message || `Request failed: ${response.status}`);
+    }
+    return data;
+  }
+
+  function showMessage(message, isError = false) {
+    const box = document.getElementById('adminMessage');
+    box.textContent = message;
+    box.classList.toggle('error', isError);
+    box.style.display = 'block';
+    window.setTimeout(() => {
+      box.style.display = 'none';
+    }, 4500);
+  }
+
+  function roleOptions(selectedRole = '') {
+    const knownRoles = roles.length ? roles.map((role) => role.name) : roleOrder;
+    return knownRoles.map((role) => (
+      `<option value="${escapeHtml(role)}" ${role === selectedRole ? 'selected' : ''}>${escapeHtml(role)}</option>`
+    )).join('');
+  }
+
+  function activeUsers() {
+    return users.filter((user) => user.is_active);
+  }
+
+  function assignableUsers() {
+    return users.filter((user) => user.is_active && ['LEVEL_1_USER', 'LEVEL_2_USER'].includes(user.role));
+  }
+
+  function editableUsers() {
+    return users;
+  }
+
+  function selectedValues(container) {
+    return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map((input) => input.value);
+  }
+
+  function assignedUserSummary(selectedIds = []) {
+    const selectedSet = new Set((Array.isArray(selectedIds) ? selectedIds : [selectedIds]).map((id) => Number(id)));
+    const selectedUsers = assignableUsers().filter((user) => selectedSet.has(user.id));
+    if (!selectedUsers.length) return 'Unassigned';
+    if (selectedUsers.length <= 2) return selectedUsers.map((user) => user.username).join(', ');
+    return `${selectedUsers.length} users selected`;
+  }
+
+  function userCheckboxDropdownHtml(dropdownId, selectedIds = []) {
+    const selectedSet = new Set((Array.isArray(selectedIds) ? selectedIds : [selectedIds]).map((id) => Number(id)));
+    const source = assignableUsers();
+    const options = source.length
+      ? source.map((user) => `
+          <label class="user-check-option">
+            <input type="checkbox" value="${user.id}" ${selectedSet.has(user.id) ? 'checked' : ''}>
+            <span>${escapeHtml(user.username)} (${escapeHtml(user.role || 'No role')})</span>
+          </label>
+        `).join('')
+      : '<div class="user-check-empty">No active LEVEL_1_USER or LEVEL_2_USER accounts</div>';
+
+    return `
+      <button type="button" class="user-check-button" data-dropdown-toggle="${escapeHtml(dropdownId)}" aria-expanded="false">
+        ${escapeHtml(assignedUserSummary(selectedIds))}
+      </button>
+      <div class="user-check-menu hidden" id="${escapeHtml(dropdownId)}">
+        ${options}
+      </div>
+    `;
+  }
+
+  function updateUserDropdownSummary(dropdown) {
+    const selectedIds = selectedValues(dropdown);
+    const button = dropdown.querySelector('.user-check-button');
+    if (button) {
+      button.textContent = assignedUserSummary(selectedIds);
+    }
+  }
+
+  function switchSection(section) {
+    currentSection = section;
+    document.querySelectorAll('.admin-nav-button').forEach((button) => {
+      button.classList.toggle('active', button.dataset.section === section);
+    });
+    document.querySelectorAll('.admin-section').forEach((panel) => {
+      panel.classList.toggle('active', panel.id === `section-${section}`);
+    });
+  }
+
+  async function loadUsers() {
+    if (!canViewUsers) {
+      users = [];
+      renderUsers();
+      renderRoleAssignments();
+      renderUserSelects();
+      renderOverview();
+      return;
+    }
+
+    const data = await apiFetch(`${API_BASE}/users?per_page=100`);
+    users = data.users || [];
+    renderUsers();
+    renderRoleAssignments();
+    renderUserSelects();
+    renderOverview();
+  }
+
+  async function loadRoles() {
+    const data = await apiFetch(`${API_BASE}/roles`);
+    roles = data.roles || [];
+    const newRole = document.getElementById('newRole');
+    newRole.innerHTML = '<option value="">Select role</option>' + roleOptions();
+    renderRoleAssignments();
+    renderOverview();
+  }
+
+  async function loadPermissions() {
+    permissionsByCategory = await apiFetch(`${API_BASE}/permissions`);
+    renderPermissionEditor();
+  }
+
+  async function loadPositions() {
+    if (!canViewPositions && !canManagePositions) {
+      positions = [];
+      renderPositions();
+      renderOverview();
+      return;
+    }
+
+    const data = await apiFetch(`${API_BASE}/positions/all`);
+    positions = Array.isArray(data) ? data : [];
+    renderPositions();
+    renderOverview();
+  }
+
+  async function loadActiveSessions() {
+    if (!canViewUsers) {
+      activeSessions = [];
+      renderActiveSessions();
+      return;
+    }
+
+    const data = await apiFetch(`${API_BASE}/active-sessions`);
+    activeSessions = data.sessions || [];
+    renderActiveSessions();
+  }
+
+  async function loadAnnouncements() {
+    const data = await apiFetch(`${API_BASE}/announcements`);
+    announcements = data.announcements || [];
+    renderAnnouncements();
+  }
+
+  function renderOverview() {
+    document.getElementById('metricUsers').textContent = users.length;
+    document.getElementById('metricActiveUsers').textContent = activeUsers().length;
+    document.getElementById('metricRoles').textContent = roles.length;
+    document.getElementById('metricPositions').textContent = positions.length;
+  }
+
+  function formatDuration(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
+  }
+
+  function formatTimestamp(value) {
+    return value ? new Date(value).toLocaleString() : '-';
+  }
+
+  function profileValue(value, fallback = '-') {
+    if (Array.isArray(value)) {
+      return value.length ? value.join(', ') : fallback;
+    }
+    return value || fallback;
+  }
+
+  function closeUserProfile() {
+    document.getElementById('userProfileModal').classList.remove('active');
+  }
+
+  function renderUserProfile(profile) {
+    const content = document.getElementById('userProfileContent');
+    const initial = escapeHtml((profile.username || 'U').slice(0, 1).toUpperCase());
+    const avatar = profile.profile_picture_url
+      ? `<img src="${escapeHtml(profile.profile_picture_url)}" alt="Profile picture for ${escapeHtml(profile.username)}">`
+      : initial;
+
+    content.innerHTML = `
+      <div class="profile-summary">
+        <div class="profile-avatar">${avatar}</div>
+        <div>
+          <div class="profile-name">${escapeHtml(profile.username)}</div>
+          <div class="profile-email">${escapeHtml(profile.email)}</div>
+          <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <span class="role-pill">${escapeHtml(profile.role || 'No role')}</span>
+            <span class="status-pill ${profile.is_active ? '' : 'inactive'}">${profile.is_active ? 'Active' : 'Locked'}</span>
+            ${profile.force_password_reset ? '<span class="status-pill inactive">Password reset required</span>' : ''}
+          </div>
+        </div>
+      </div>
+      <div class="profile-details">
+        <div class="profile-detail">
+          <div class="profile-detail-label">Created By</div>
+          <div class="profile-detail-value">${escapeHtml(profileValue(profile.created_by, 'System'))}</div>
+        </div>
+        <div class="profile-detail">
+          <div class="profile-detail-label">Created At</div>
+          <div class="profile-detail-value">${escapeHtml(formatTimestamp(profile.created_at))}</div>
+        </div>
+        <div class="profile-detail">
+          <div class="profile-detail-label">Last Login</div>
+          <div class="profile-detail-value">${escapeHtml(formatTimestamp(profile.last_login))}</div>
+        </div>
+        <div class="profile-detail">
+          <div class="profile-detail-label">Last Seen</div>
+          <div class="profile-detail-value">${escapeHtml(formatTimestamp(profile.last_seen_at))}</div>
+        </div>
+        <div class="profile-detail">
+          <div class="profile-detail-label">Assigned Positions</div>
+          <div class="profile-detail-value">${escapeHtml(profileValue(profile.assigned_positions, 'Unassigned'))}</div>
+        </div>
+        <div class="profile-detail">
+          <div class="profile-detail-label">Applicant Records</div>
+          <div class="profile-detail-value">${escapeHtml(profile.applicants_count)}</div>
+        </div>
+        <div class="profile-detail">
+          <div class="profile-detail-label">Remarks Added</div>
+          <div class="profile-detail-value">${escapeHtml(profile.remarks_count)}</div>
+        </div>
+        <div class="profile-detail">
+          <div class="profile-detail-label">Active Session Started</div>
+          <div class="profile-detail-value">${escapeHtml(formatTimestamp(profile.session_started_at))}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function viewUserProfile(userId) {
+    const modal = document.getElementById('userProfileModal');
+    const content = document.getElementById('userProfileContent');
+    content.innerHTML = '<div class="profile-detail">Loading profile...</div>';
+    modal.classList.add('active');
+
+    const profile = await apiFetch(`${API_BASE}/users/${userId}/profile`);
+    renderUserProfile(profile);
+  }
+
+  function renderActiveSessions() {
+    const body = document.getElementById('activeSessionsBody');
+    if (!body) return;
+
+    if (!activeSessions.length) {
+      body.innerHTML = '<tr><td colspan="6">No active users.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = activeSessions.map((session) => `
+      <tr>
+        <td>
+          <a class="admin-profile-link" href="/admin/users/${session.user_id}/profile">${escapeHtml(session.username)}</a>
+          ${session.is_current_user ? ' <span class="status-pill">Current account</span>' : ''}
+        </td>
+        <td><span class="role-pill">${escapeHtml(session.role || 'No role')}</span></td>
+        <td data-session-timer="${session.user_id}" data-session-start="${escapeHtml(session.session_started_at || '')}">00:00:00</td>
+        <td>${escapeHtml(formatTimestamp(session.session_started_at))}</td>
+        <td>${escapeHtml(formatTimestamp(session.last_seen_at))}</td>
+        <td>
+          ${session.is_current_user
+            ? '<span class="status-pill">Monitoring</span>'
+            : `<button type="button" class="admin-btn small danger" data-remote-logout="${session.user_id}">Remote Log Out</button>`}
+        </td>
+      </tr>
+    `).join('');
+    updateSessionTimers();
+  }
+
+  function updateSessionTimers() {
+    const now = Date.now();
+    document.querySelectorAll('[data-session-timer]').forEach((cell) => {
+      const startedAt = Date.parse(cell.dataset.sessionStart);
+      cell.textContent = Number.isNaN(startedAt) ? '00:00:00' : formatDuration(now - startedAt);
+    });
+  }
+
+  function renderUsers() {
+    const body = document.getElementById('usersTableBody');
+    const tableUsers = editableUsers();
+    if (!tableUsers.length) {
+      body.innerHTML = '<tr><td colspan="6">No users found.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = tableUsers.map((user) => {
+      const isSelf = user.id === currentUserId;
+      return `
+      <tr data-user-row="${user.id}">
+        <td>
+          <input type="text" value="${escapeHtml(user.username)}" data-user-username="${user.id}" aria-label="Username" ${isSelf ? 'disabled' : ''}>
+        </td>
+        <td>
+          <input type="email" value="${escapeHtml(user.email)}" data-user-email="${user.id}" aria-label="Email for ${escapeHtml(user.username)}" ${isSelf ? 'disabled' : ''}>
+        </td>
+        <td><span class="role-pill">${escapeHtml(user.role || 'No role')}</span></td>
+        <td>
+          <label class="admin-check">
+            <input type="checkbox" data-user-active="${user.id}" ${user.is_active ? 'checked' : ''} ${isSelf ? 'disabled' : ''}>
+            <span data-user-status-label="${user.id}">${user.is_active ? 'Active' : 'Locked'}</span>
+          </label>
+        </td>
+        <td>${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td>
+        <td>
+          <div class="admin-actions">
+            <a class="admin-btn small secondary" href="/admin/users/${user.id}/profile">View Profile</a>
+            ${isSelf
+              ? '<span class="status-pill">Current account</span>'
+              : `<button type="button" class="admin-btn small" data-save-user="${user.id}">Save</button>
+                 ${user.is_active ? `<button type="button" class="admin-btn small danger" data-lock-user="${user.id}">Lock</button>` : '<span class="status-pill inactive">Locked</span>'}
+                 <button type="button" class="admin-btn small danger" data-delete-user="${user.id}">Delete</button>`}
+          </div>
+        </td>
+      </tr>
+    `;
+    }).join('');
+  }
+
+  function renderUserSelects() {
+    const permissionSelect = document.getElementById('permissionUserSelect');
+    const passwordSelect = document.getElementById('passwordUserSelect');
+    const selectableUsers = editableUsers();
+    permissionSelect.innerHTML = selectableUsers.map((user) => (
+      `<option value="${user.id}" ${Number(selectedPermissionUserId) === user.id ? 'selected' : ''}>${escapeHtml(user.username)} (${escapeHtml(user.role || 'No role')})</option>`
+    )).join('');
+
+    const passwordUsers = selectableUsers.filter((user) => user.id !== currentUserId && user.is_active);
+    passwordSelect.innerHTML = passwordUsers.length
+      ? passwordUsers.map((user) => (
+          `<option value="${user.id}">${escapeHtml(user.username)} (${escapeHtml(user.role || 'No role')})</option>`
+        )).join('')
+      : '<option value="">No other active users</option>';
+    passwordSelect.disabled = !passwordUsers.length;
+
+    if (!selectableUsers.some((user) => user.id === Number(selectedPermissionUserId))) {
+      selectedPermissionUserId = selectableUsers[0] ? selectableUsers[0].id : null;
+    }
+
+    if (selectedPermissionUserId) {
+      permissionSelect.value = selectedPermissionUserId;
+    }
+
+    document.getElementById('newPositionUser').innerHTML = userCheckboxDropdownHtml('newPositionUserMenu', []);
+    renderPositions();
+  }
+
+  function renderRoleAssignments() {
+    const body = document.getElementById('rolesTableBody');
+    const tableUsers = editableUsers();
+    if (!tableUsers.length) {
+      body.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = tableUsers.map((user) => {
+      const isSelf = user.id === currentUserId;
+      return `
+      <tr>
+        <td><strong>${escapeHtml(user.username)}</strong><br><small>${escapeHtml(user.email)}</small></td>
+        <td><span class="role-pill">${escapeHtml(user.role || 'No role')}</span></td>
+        <td>
+          <select data-role-user="${user.id}" aria-label="Role for ${escapeHtml(user.username)}" ${isSelf ? 'disabled' : ''}>
+            ${roleOptions(user.role)}
+          </select>
+        </td>
+        <td>
+          ${isSelf
+            ? '<span class="status-pill">Current account</span>'
+            : `<button type="button" class="admin-btn small" data-save-role="${user.id}">Change Role</button>`}
+        </td>
+      </tr>
+    `;
+    }).join('');
+  }
+
+  async function renderPermissionEditor() {
+    const list = document.getElementById('permissionList');
+    if (!canManagePermissions) {
+      list.innerHTML = '<div class="admin-card">You do not have permission to manage user permissions.</div>';
+      return;
+    }
+
+    if (!selectedPermissionUserId) {
+      list.innerHTML = '<div class="admin-card">Select a user to edit permissions.</div>';
+      return;
+    }
+
+    const userPerms = await apiFetch(`${API_BASE}/users/${selectedPermissionUserId}/permissions`);
+    const inherited = new Set(userPerms.permissions || []);
+    const overrides = userPerms.overrides || {};
+
+    let html = '';
+    Object.entries(permissionsByCategory).forEach(([category, permissions]) => {
+      permissions.forEach((permission) => {
+        const override = overrides[permission.key];
+        const selected = override ? (override.is_allowed ? 'allow' : 'deny') : 'inherit';
+        const roleDefault = inherited.has(permission.key) ? 'allowed by role' : 'denied by role';
+        html += `
+          <div class="permission-item">
+            <div class="permission-key">${escapeHtml(permission.key)}</div>
+            <div class="permission-desc">${escapeHtml(category)} - ${escapeHtml(permission.description)} (${roleDefault})</div>
+            <select data-permission-key="${escapeHtml(permission.key)}">
+              <option value="inherit" ${selected === 'inherit' ? 'selected' : ''}>Inherit role default</option>
+              <option value="allow" ${selected === 'allow' ? 'selected' : ''}>Allow for this user</option>
+              <option value="deny" ${selected === 'deny' ? 'selected' : ''}>Deny for this user</option>
+            </select>
+          </div>
+        `;
+      });
+    });
+    list.innerHTML = html || '<div class="admin-card">No permissions found.</div>';
+  }
+
+  function renderPositions() {
+    const body = document.getElementById('positionsTableBody');
+    if (!body) return;
+
+    if (!positions.length) {
+      body.innerHTML = '<tr><td colspan="4">No applicant positions found.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = positions.map((position) => `
+      <tr>
+        <td>
+          <input type="text" value="${escapeHtml(position.title)}" data-position-title="${position.id}" aria-label="Position title">
+        </td>
+        <td>
+          <label class="admin-check">
+            <input type="checkbox" data-position-active="${position.id}" ${position.is_active ? 'checked' : ''}>
+            ${position.is_active ? 'Active' : 'Inactive'}
+          </label>
+        </td>
+        <td>
+          <div class="user-check-dropdown" data-user-checkbox-dropdown data-position-user="${position.id}">
+            ${userCheckboxDropdownHtml(`positionUserMenu-${position.id}`, position.assigned_employee_ids || [])}
+          </div>
+          <small>${escapeHtml((position.assigned_employees || []).map((user) => user.username).join(', ') || 'Unassigned')}</small>
+        </td>
+        <td>
+          <div class="admin-actions">
+            <button type="button" class="admin-btn small" data-save-position="${position.id}">Save</button>
+            <button type="button" class="admin-btn small danger" data-delete-position="${position.id}">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderAnnouncements() {
+    const body = document.getElementById('announcementsTableBody');
+    if (!body) return;
+
+    if (!announcements.length) {
+      body.innerHTML = '<tr><td colspan="5">No announcements published.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = announcements.map((announcement) => `
+      <tr>
+        <td class="announcement-admin-title">${escapeHtml(announcement.title)}</td>
+        <td class="announcement-admin-message">${escapeHtml(announcement.message)}</td>
+        <td>${escapeHtml(announcement.created_by || 'System')}</td>
+        <td>${escapeHtml(formatTimestamp(announcement.created_at))}</td>
+        <td>
+          ${isSuperAdmin
+            ? `<button type="button" class="admin-btn small danger" data-delete-announcement="${announcement.id}">Delete</button>`
+            : '<span class="status-pill">View only</span>'}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function saveUser(userId) {
+    const username = document.querySelector(`[data-user-username="${userId}"]`).value.trim();
+    const email = document.querySelector(`[data-user-email="${userId}"]`).value.trim();
+    const isActive = document.querySelector(`[data-user-active="${userId}"]`).checked;
+    await apiFetch(`${API_BASE}/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ username, email, is_active: isActive })
+    });
+    showMessage('User updated.');
+    await loadUsers();
+  }
+
+  async function lockUser(userId) {
+    const user = users.find((item) => item.id === Number(userId));
+    if (!confirm(`Lock user "${user ? user.username : userId}"? This will prevent the account from logging in.`)) return;
+    await apiFetch(`${API_BASE}/users/${userId}`, { method: 'DELETE' });
+    showMessage('User locked.');
+    await loadUsers();
+    if (selectedPermissionUserId === Number(userId)) {
+      await renderPermissionEditor();
+    }
+  }
+
+  async function deleteUser(userId) {
+    const user = users.find((item) => item.id === Number(userId));
+    if (!confirm(`Delete user "${user ? user.username : userId}"? SUPERADMIN can restore this account later.`)) return;
+    await apiFetch(`${API_BASE}/users/${userId}/permanent`, { method: 'DELETE' });
+    showMessage('User deleted.');
+    await loadUsers();
+    if (selectedPermissionUserId === Number(userId)) {
+      selectedPermissionUserId = null;
+      await renderPermissionEditor();
+    }
+  }
+
+  async function remoteLogoutUser(userId) {
+    const session = activeSessions.find((item) => item.user_id === Number(userId));
+    if (!confirm(`Log out "${session ? session.username : userId}" remotely?`)) return;
+    await apiFetch(`${API_BASE}/users/${userId}/remote-logout`, { method: 'POST' });
+    showMessage('User logged out remotely.');
+    await loadActiveSessions();
+  }
+
+  async function saveRole(userId) {
+    const role = document.querySelector(`[data-role-user="${userId}"]`).value;
+    await apiFetch(`${API_BASE}/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role })
+    });
+    showMessage('User role changed.');
+    await loadUsers();
+  }
+
+  async function savePermissions() {
+    if (!canManagePermissions || !selectedPermissionUserId) return;
+
+    const updates = Array.from(document.querySelectorAll('[data-permission-key]')).map((select) => ({
+      key: select.dataset.permissionKey,
+      value: select.value
+    }));
+
+    for (const update of updates) {
+      if (update.value === 'inherit') {
+        await apiFetch(`${API_BASE}/users/${selectedPermissionUserId}/permissions/${encodeURIComponent(update.key)}`, {
+          method: 'DELETE'
+        });
+      } else {
+        await apiFetch(`${API_BASE}/users/${selectedPermissionUserId}/permissions`, {
+          method: 'POST',
+          body: JSON.stringify({
+            permission_key: update.key,
+            is_allowed: update.value === 'allow',
+            reason: 'Updated from admin panel'
+          })
+        });
+      }
+    }
+
+    showMessage('Permissions updated.');
+    await renderPermissionEditor();
+  }
+
+  async function createUser(event) {
+    event.preventDefault();
+    await apiFetch(`${API_BASE}/users`, {
+      method: 'POST',
+      body: JSON.stringify({
+        username: document.getElementById('newUsername').value.trim(),
+        email: document.getElementById('newEmail').value.trim(),
+        password: document.getElementById('newPassword').value,
+        role: document.getElementById('newRole').value
+      })
+    });
+    event.target.reset();
+    showMessage('User added.');
+    await loadUsers();
+  }
+
+  async function changeUserPassword(event) {
+    event.preventDefault();
+    const userId = document.getElementById('passwordUserSelect').value;
+    const newPassword = document.getElementById('adminNewPassword').value;
+    const confirmPassword = document.getElementById('adminConfirmPassword').value;
+    if (!userId) {
+      throw new Error('Select a user first.');
+    }
+    if (newPassword !== confirmPassword) {
+      throw new Error('Passwords do not match.');
+    }
+
+    await apiFetch(`${API_BASE}/users/${userId}/password`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        new_password: newPassword,
+        force_password_reset: document.getElementById('forceUserPasswordReset').checked
+      })
+    });
+    event.target.reset();
+    document.getElementById('forceUserPasswordReset').checked = true;
+    showMessage('User password changed.');
+    await loadUsers();
+  }
+
+  async function createPosition(event) {
+    event.preventDefault();
+    await apiFetch(`${API_BASE}/positions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        title: document.getElementById('newPositionTitle').value.trim(),
+        is_active: true,
+        assigned_employee_ids: selectedValues(document.getElementById('newPositionUser'))
+      })
+    });
+    event.target.reset();
+    showMessage('Applicant position added.');
+    await loadPositions();
+  }
+
+  async function savePosition(positionId) {
+    await apiFetch(`${API_BASE}/positions/${positionId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        title: document.querySelector(`[data-position-title="${positionId}"]`).value.trim(),
+        is_active: document.querySelector(`[data-position-active="${positionId}"]`).checked,
+        assigned_employee_ids: selectedValues(document.querySelector(`[data-position-user="${positionId}"]`))
+      })
+    });
+    showMessage('Applicant position updated.');
+    await loadPositions();
+  }
+
+  async function deletePosition(positionId) {
+    const position = positions.find((item) => item.id === Number(positionId));
+    if (!confirm(`Delete applicant position "${position ? position.title : positionId}"?`)) return;
+    await apiFetch(`${API_BASE}/positions/${positionId}`, { method: 'DELETE' });
+    showMessage('Applicant position deleted.');
+    await loadPositions();
+  }
+
+  async function createAnnouncement(event) {
+    event.preventDefault();
+    await apiFetch(`${API_BASE}/announcements`, {
+      method: 'POST',
+      body: JSON.stringify({
+        title: document.getElementById('announcementTitle').value.trim(),
+        message: document.getElementById('announcementMessage').value.trim()
+      })
+    });
+    event.target.reset();
+    showMessage('Announcement published.');
+    await loadAnnouncements();
+  }
+
+  async function deleteAnnouncement(announcementId) {
+    const announcement = announcements.find((item) => item.id === Number(announcementId));
+    if (!confirm(`Delete announcement "${announcement ? announcement.title : announcementId}"?`)) return;
+    await apiFetch(`${API_BASE}/announcements/${announcementId}`, { method: 'DELETE' });
+    showMessage('Announcement deleted.');
+    await loadAnnouncements();
+  }
+
+  function bindEvents() {
+    document.querySelectorAll('[data-section]').forEach((button) => {
+      button.addEventListener('click', () => switchSection(button.dataset.section));
+    });
+
+    document.getElementById('createUserForm').addEventListener('submit', (event) => {
+      createUser(event).catch((error) => showMessage(error.message, true));
+    });
+
+    document.getElementById('changeUserPasswordForm').addEventListener('submit', (event) => {
+      changeUserPassword(event).catch((error) => showMessage(error.message, true));
+    });
+
+    document.getElementById('createPositionForm').addEventListener('submit', (event) => {
+      createPosition(event).catch((error) => showMessage(error.message, true));
+    });
+
+    const createAnnouncementForm = document.getElementById('createAnnouncementForm');
+    if (createAnnouncementForm) {
+      createAnnouncementForm.addEventListener('submit', (event) => {
+        createAnnouncement(event).catch((error) => showMessage(error.message, true));
+      });
+    }
+
+    document.getElementById('permissionUserSelect').addEventListener('change', (event) => {
+      selectedPermissionUserId = Number(event.target.value);
+      renderPermissionEditor().catch((error) => showMessage(error.message, true));
+    });
+
+    document.getElementById('savePermissionsButton').addEventListener('click', () => {
+      savePermissions().catch((error) => showMessage(error.message, true));
+    });
+
+    document.getElementById('refreshAdminPanel').addEventListener('click', () => {
+      refreshCurrentSection().catch((error) => showMessage(error.message, true));
+    });
+
+    document.addEventListener('change', (event) => {
+      const activeToggle = event.target.closest('[data-user-active]');
+      if (activeToggle) {
+        const label = document.querySelector(`[data-user-status-label="${activeToggle.dataset.userActive}"]`);
+        if (label) {
+          label.textContent = activeToggle.checked ? 'Active' : 'Locked';
+        }
+      }
+
+      const checkbox = event.target.closest('.user-check-option input[type="checkbox"]');
+      if (!checkbox) return;
+      const dropdown = checkbox.closest('[data-user-checkbox-dropdown]');
+      if (dropdown) {
+        updateUserDropdownSummary(dropdown);
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      const closeProfileButton = event.target.closest('[data-close-profile]');
+      if (closeProfileButton || event.target.id === 'userProfileModal') {
+        closeUserProfile();
+        return;
+      }
+
+      const dropdownToggle = event.target.closest('[data-dropdown-toggle]');
+      if (dropdownToggle) {
+        const menu = document.getElementById(dropdownToggle.dataset.dropdownToggle);
+        const isOpening = menu && menu.classList.contains('hidden');
+        document.querySelectorAll('.user-check-menu').forEach((openMenu) => openMenu.classList.add('hidden'));
+        document.querySelectorAll('[data-dropdown-toggle]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+        if (menu && isOpening) {
+          menu.classList.remove('hidden');
+          dropdownToggle.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+
+      if (!event.target.closest('.user-check-dropdown')) {
+        document.querySelectorAll('.user-check-menu').forEach((menu) => menu.classList.add('hidden'));
+        document.querySelectorAll('[data-dropdown-toggle]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+      }
+
+      const viewProfileButton = event.target.closest('[data-view-profile]');
+      if (viewProfileButton) {
+        viewUserProfile(viewProfileButton.dataset.viewProfile).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const saveUserButton = event.target.closest('[data-save-user]');
+      if (saveUserButton) {
+        saveUser(saveUserButton.dataset.saveUser).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const lockUserButton = event.target.closest('[data-lock-user]');
+      if (lockUserButton) {
+        lockUser(lockUserButton.dataset.lockUser).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const deleteUserButton = event.target.closest('[data-delete-user]');
+      if (deleteUserButton) {
+        deleteUser(deleteUserButton.dataset.deleteUser).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const remoteLogoutButton = event.target.closest('[data-remote-logout]');
+      if (remoteLogoutButton) {
+        remoteLogoutUser(remoteLogoutButton.dataset.remoteLogout).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const saveRoleButton = event.target.closest('[data-save-role]');
+      if (saveRoleButton) {
+        saveRole(saveRoleButton.dataset.saveRole).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const savePositionButton = event.target.closest('[data-save-position]');
+      if (savePositionButton) {
+        savePosition(savePositionButton.dataset.savePosition).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const deletePositionButton = event.target.closest('[data-delete-position]');
+      if (deletePositionButton) {
+        deletePosition(deletePositionButton.dataset.deletePosition).catch((error) => showMessage(error.message, true));
+        return;
+      }
+
+      const deleteAnnouncementButton = event.target.closest('[data-delete-announcement]');
+      if (deleteAnnouncementButton) {
+        deleteAnnouncement(deleteAnnouncementButton.dataset.deleteAnnouncement).catch((error) => showMessage(error.message, true));
+      }
+    });
+  }
+
+  async function refreshCurrentSection() {
+    const button = document.getElementById('refreshAdminPanel');
+    button.disabled = true;
+    try {
+      if (currentSection === 'overview') {
+        await Promise.all([loadRoles(), loadUsers(), loadPositions(), loadActiveSessions()]);
+      } else if (currentSection === 'users') {
+        await loadUsers();
+      } else if (currentSection === 'permissions') {
+        await Promise.all([loadUsers(), loadPermissions()]);
+        if (selectedPermissionUserId) {
+          await renderPermissionEditor();
+        }
+      } else if (currentSection === 'roles') {
+        await Promise.all([loadRoles(), loadUsers()]);
+      } else if (currentSection === 'positions') {
+        await Promise.all([loadUsers(), loadPositions()]);
+      } else if (currentSection === 'announcements') {
+        await loadAnnouncements();
+      }
+      showMessage('List refreshed.');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    bindEvents();
+    try {
+      await Promise.all([loadRoles(), loadUsers(), loadPermissions(), loadPositions(), loadActiveSessions(), loadAnnouncements()]);
+      if (selectedPermissionUserId) {
+        await renderPermissionEditor();
+      }
+      monitorTimer = window.setInterval(() => {
+        updateSessionTimers();
+        if (currentSection === 'overview') {
+          loadActiveSessions().catch((error) => showMessage(error.message, true));
+        }
+      }, 1000);
+    } catch (error) {
+      showMessage(error.message, true);
+    }
+  });
+</script>
+{% endblock %}

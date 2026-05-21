@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ATS</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container dashboard-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+      <h1>Applicant Dashboard</h1>
+      <div>
+        <span id="welcome-employee" style="display: none; font-weight: 600; color: #667eea;"></span>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px; display: none;">Logout</button>
+      </div>
+    </div>
+    
+    <p>No applicants yet? <a href="index.html">Register as applicant</a></p>
+    
+    <div id="employee-section" class="hidden">
+      <h2>Recent Applicants</h2>
+      <table class="table" id="applicants-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Applied</th>
+            <th>Resume Preview</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      
+      <div style="margin-top: 20px;">
+        <small>Total Applicants: <span id="total-count">0</span></small>
+      </div>
+    </div>
+    
+    <div class="nav-links">
+      <a href="index.html">Applicant Register</a>
+      <a href="employee-register.html">Employee Register</a>
+      <a href="employee-login.html">Employee Login</a>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+  <script>
+    // Additional dashboard init
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentEmp = JSON.parse(localStorage.getItem('ats_current_employee') || 'null');
+      if (currentEmp) {
+        document.getElementById('welcome-employee').textContent = `Welcome, ${currentEmp.username}!`;
+        document.getElementById('welcome-employee').style.display = 'inline';
+        document.getElementById('logout-btn').style.display = 'inline';
+        document.getElementById('employee-section').classList.remove('hidden');
+      }
+      
+      const applicants = JSON.parse(localStorage.getItem('ats_applicants') || '[]');
+      document.getElementById('total-count').textContent = applicants.length;
+    });
+  </script>
+</body>
+</html>

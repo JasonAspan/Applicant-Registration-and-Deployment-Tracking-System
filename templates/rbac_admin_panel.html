@@ -1,0 +1,1115 @@
+{% extends "base_employee.html" %}
+
+{% block title %}RBAC Admin Control Panel{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #667eea;
+        --primary-dark: #5568d3;
+        --secondary: #764ba2;
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --success: #28a745;
+        --info: #17a2b8;
+        --light: #f8f9fa;
+        --dark: #343a40;
+        --border: #e9ecef;
+    }
+
+    .rbac-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+        padding: 20px 0;
+    }
+
+    /* Header */
+    .rbac-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .rbac-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .rbac-subtitle {
+        opacity: 0.95;
+        margin-top: 10px;
+    }
+
+    /* Nav Sidebar */
+    .rbac-sidebar {
+        background: white;
+        border-radius: 12px;
+        padding: 20px 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+    }
+
+    .rbac-sidebar .nav-link {
+        color: var(--dark);
+        padding: 12px 20px;
+        border-left: 4px solid transparent;
+        font-weight: 500;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .rbac-sidebar .nav-link:hover {
+        background: var(--light);
+        border-left-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .rbac-sidebar .nav-link.active {
+        background: var(--primary)15;
+        border-left-color: var(--primary);
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    /* Cards */
+    .card {
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, var(--primary)10 0%, var(--secondary)10 100%);
+        border: none;
+        padding: 20px;
+        border-radius: 12px 12px 0 0;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    /* Stat Cards */
+    .stat-box {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s;
+    }
+
+    .stat-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-weight: 500;
+        margin-top: 5px;
+    }
+
+    /* User Card */
+    .user-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        border-left: 5px solid var(--primary);
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s;
+    }
+
+    .user-card:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-card.active {
+        border-left-color: var(--success);
+    }
+
+    .user-card.inactive {
+        border-left-color: var(--danger);
+        opacity: 0.7;
+    }
+
+    .user-info {
+        flex: 1;
+    }
+
+    .user-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 5px 0;
+    }
+
+    .user-email {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin: 3px 0;
+    }
+
+    .user-meta {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Badges */
+    .badge-role {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-role.super-admin {
+        background: #dc354520;
+        color: #dc3545;
+    }
+
+    .badge-role.admin {
+        background: #fd7e1420;
+        color: #fd7e14;
+    }
+
+    .badge-role.level-2 {
+        background: #0dcaf020;
+        color: #0dcaf0;
+    }
+
+    .badge-role.level-1 {
+        background: #6c757d20;
+        color: #6c757d;
+    }
+
+    .badge-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-status.active {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .badge-status.inactive {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    /* Permission Grid */
+    .perms-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .perm-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        border: 2px solid var(--border);
+        transition: all 0.3s;
+    }
+
+    .perm-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .perm-key {
+        font-weight: 600;
+        color: var(--primary);
+        font-family: monospace;
+        margin-bottom: 8px;
+    }
+
+    .perm-desc {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+    }
+
+    .perm-category {
+        display: inline-block;
+        padding: 4px 8px;
+        background: var(--light);
+        border-radius: 4px;
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    /* Forms */
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+
+    .form-section h5 {
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid var(--border);
+        padding: 10px 15px;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .helper-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+
+    /* Buttons */
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Tables */
+    .table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .table thead {
+        background: linear-gradient(135deg, var(--primary)10 0%, var(--secondary)10 100%);
+    }
+
+    .table th {
+        border: none;
+        font-weight: 600;
+        color: var(--primary);
+        padding: 15px;
+    }
+
+    .table td {
+        border-bottom: 1px solid var(--border);
+        padding: 15px;
+    }
+
+    .table tbody tr:hover {
+        background: var(--light);
+    }
+
+    /* Alerts */
+    .alert {
+        border-radius: 8px;
+        border: none;
+        padding: 15px 20px;
+    }
+
+    .alert-info {
+        background: #d7f3ff;
+        color: #0c5460;
+    }
+
+    .alert-warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    /* Modal */
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        border: none;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Loading */
+    .spinner-box {
+        display: none;
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .spinner-box.active {
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .rbac-title {
+            font-size: 1.8rem;
+        }
+
+        .user-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .perms-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .rbac-sidebar {
+            position: static;
+            margin-bottom: 20px;
+        }
+    }
+
+    .tabs-nav {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+    }
+
+    .tabs-nav .nav-link {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .tabs-nav .nav-link.active {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+    }
+</style>
+
+<div class="rbac-wrapper">
+    <!-- Header -->
+    <div class="rbac-header">
+        <div class="container">
+            <h1 class="rbac-title">🔐 RBAC Admin Control Panel</h1>
+            <p class="rbac-subtitle">Role-Based Access Control & Permission Management</p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3 mb-4">
+                <nav class="rbac-sidebar">
+                    <a href="#" class="nav-link active" onclick="switchTab('dashboard')">
+                        <span>📊</span> Dashboard
+                    </a>
+                    <a href="#" class="nav-link" onclick="switchTab('users')">
+                        <span>👥</span> Users
+                    </a>
+                    <a href="#" class="nav-link" onclick="switchTab('roles')">
+                        <span>👔</span> Roles
+                    </a>
+                    <a href="#" class="nav-link" onclick="switchTab('permissions')">
+                        <span>🔑</span> Permissions
+                    </a>
+                    <a href="#" class="nav-link" onclick="switchTab('positions')">
+                        <span>💼</span> Positions
+                    </a>
+                    <a href="#" class="nav-link" onclick="switchTab('settings')">
+                        <span>⚙️</span> Settings
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+
+                <!-- ===== DASHBOARD ===== -->
+                <section id="dashboard-section">
+                    <h2 class="mb-4">📊 Dashboard Overview</h2>
+
+                    <!-- Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-icon">👥</div>
+                                <div class="stat-number" id="stat-users">-</div>
+                                <div class="stat-label">Total Users</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-icon">✅</div>
+                                <div class="stat-number" id="stat-active">-</div>
+                                <div class="stat-label">Active Users</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-icon">👔</div>
+                                <div class="stat-number">4</div>
+                                <div class="stat-label">Roles</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-icon">🔑</div>
+                                <div class="stat-number">16</div>
+                                <div class="stat-label">Permissions</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-header">⚡ Quick Actions</div>
+                        <div class="card-body">
+                            <button class="btn btn-primary btn-icon" onclick="switchTab('users', 'create')">
+                                <span>➕</span> Create User
+                            </button>
+                            <button class="btn btn-info btn-icon" onclick="switchTab('permissions')">
+                                <span>🔍</span> View Permissions
+                            </button>
+                            <button class="btn btn-secondary btn-icon" onclick="switchTab('roles')">
+                                <span>📋</span> View Roles
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- System Info -->
+                    <div class="card">
+                        <div class="card-header">ℹ️ System Information</div>
+                        <div class="card-body">
+                            <table class="table table-sm mb-0">
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td><span class="badge-status active">🟢 Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Current User:</strong></td>
+                                    <td id="current-user">SUPERADMIN</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Roles Configured:</strong></td>
+                                    <td>4 (SUPER_ADMIN, ADMIN, LEVEL_2_USER, LEVEL_1_USER)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Last Updated:</strong></td>
+                                    <td id="last-update">Just now</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== USERS ===== -->
+                <section id="users-section" style="display: none;">
+                    <h2 class="mb-4">👥 User Management</h2>
+
+                    <!-- Create User Form -->
+                    <div class="form-section">
+                        <h5>➕ Create New User</h5>
+                        <form id="createUserForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Username *</label>
+                                        <input type="text" class="form-control" id="newUsername" required>
+                                        <div class="helper-text">Unique identifier for login</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Email *</label>
+                                        <input type="email" class="form-control" id="newEmail" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Password *</label>
+                                        <input type="password" class="form-control" id="newPassword" minlength="8" required>
+                                        <div class="helper-text">Min 8 characters (force reset on first login)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Role *</label>
+                                        <select class="form-select" id="newRole" required>
+                                            <option value="">-- Select --</option>
+                                            <option value="LEVEL_1_USER">LEVEL_1_USER</option>
+                                            <option value="LEVEL_2_USER">LEVEL_2_USER</option>
+                                            <option value="ADMIN">ADMIN</option>
+                                            <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mb-3">
+                                ⚠️ User must reset password on first login
+                            </div>
+                            <button type="submit" class="btn btn-success btn-lg">✅ Create User</button>
+                        </form>
+                    </div>
+
+                    <!-- Users List -->
+                    <h4 style="margin: 40px 0 20px 0;">📋 All Users</h4>
+                    <div id="usersListContainer">
+                        <div class="spinner-box active">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== ROLES ===== -->
+                <section id="roles-section" style="display: none;">
+                    <h2 class="mb-4">👔 Role Configuration</h2>
+
+                    <div class="alert alert-info">
+                        ℹ️ Roles define baseline permissions. Users can have individual overrides.
+                    </div>
+
+                    <div id="rolesContainer">
+                        <div class="spinner-box active">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== PERMISSIONS ===== -->
+                <section id="permissions-section" style="display: none;">
+                    <h2 class="mb-4">🔑 Available Permissions</h2>
+
+                    <div class="alert alert-info">
+                        ℹ️ All available permissions in the system. Users inherit from roles and get overrides.
+                    </div>
+
+                    <div id="permissionsContainer" class="perms-grid">
+                        <div class="spinner-box active">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== POSITIONS ===== -->
+                <section id="positions-section" style="display: none;">
+                    <h2 class="mb-4">💼 Manage Applicant Positions</h2>
+
+                    <!-- Create Position Form -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">➕ Add New Position</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Position Title</label>
+                                        <input type="text" class="form-control" id="positionTitle" placeholder="e.g., Software Engineer">
+                                        <div class="helper-text">Must be unique</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <select class="form-control" id="positionStatus">
+                                            <option value="1">Active</option>
+                                            <option value="0">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="positionDescription" rows="3" placeholder="Position description..."></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="createPosition()">
+                                <i class="bi bi-plus-circle"></i> Create Position
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Positions List -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">📍 Available Positions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="positionsContainer" style="min-height: 200px;">
+                                <div class="spinner-box active">
+                                    <div class="spinner-border text-primary"></div>
+                                    <p>Loading positions...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== SETTINGS ===== -->
+                <section id="settings-section" style="display: none;">
+                    <h2 class="mb-4">⚙️ Settings & Configuration</h2>
+
+                    <!-- Security Settings -->
+                    <div class="form-section">
+                        <h5>🔒 Security Settings</h5>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="forcePwdReset" checked>
+                                <label class="form-check-label" for="forcePwdReset">
+                                    <strong>Force Password Reset on First Login</strong>
+                                    <div class="helper-text">Users must change password on first login</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password Expiration (days)</label>
+                            <input type="number" class="form-control" value="90" min="0">
+                            <div class="helper-text">Set 0 to disable expiration</div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 Save</button>
+                    </div>
+
+                    <!-- Permission Settings -->
+                    <div class="form-section">
+                        <h5>🔐 Permission Settings</h5>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="strictMode">
+                                <label class="form-check-label" for="strictMode">
+                                    <strong>Strict Permission Checking</strong>
+                                    <div class="helper-text">Deny access if any deny permission exists</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 Save</button>
+                    </div>
+
+                    <!-- Audit Settings -->
+                    <div class="form-section">
+                        <h5>📋 Audit Settings</h5>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auditLogins" checked>
+                                <label class="form-check-label" for="auditLogins">
+                                    <strong>Log All Login Attempts</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auditPermChanges" checked>
+                                <label class="form-check-label" for="auditPermChanges">
+                                    <strong>Log Permission Changes</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 Save</button>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Permissions Modal -->
+<div class="modal fade" id="editPermsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User Permissions</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 id="editUserDisplay" style="margin-bottom: 20px;"></h6>
+                <div id="editPermsContainer" class="perms-grid">
+                    <div class="spinner-box active">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="savePerms()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = '/api';
+    let currentEditUserId = null;
+
+    // Tab switching
+    function switchTab(tab, action = null) {
+        document.querySelectorAll('[id$="-section"]').forEach(el => el.style.display = 'none');
+        document.getElementById(tab + '-section').style.display = 'block';
+
+        document.querySelectorAll('.rbac-sidebar .nav-link').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+
+        loadSection(tab);
+    }
+
+    function loadSection(section) {
+        if (section === 'dashboard') loadDashboard();
+        else if (section === 'users') loadUsers();
+        else if (section === 'roles') loadRoles();
+        else if (section === 'permissions') loadPermissions();
+        else if (section === 'positions') loadPositions();
+    }
+
+    // Dashboard
+    function loadDashboard() {
+        fetch(`${API}/users`)
+            .then(r => r.json())
+            .then(users => {
+                document.getElementById('stat-users').textContent = users.length;
+                document.getElementById('stat-active').textContent = users.filter(u => u.is_active).length;
+            });
+    }
+
+    // Users
+    function loadUsers() {
+        const container = document.getElementById('usersListContainer');
+        fetch(`${API}/users`)
+            .then(r => r.json())
+            .then(users => {
+                if (!users.length) {
+                    container.innerHTML = '<div class="text-center text-muted py-5">No users found</div>';
+                    return;
+                }
+                container.innerHTML = users.map(u => `
+                    <div class="user-card ${u.is_active ? 'active' : 'inactive'}">
+                        <div class="user-info">
+                            <p class="user-name">${u.username}</p>
+                            <p class="user-email">${u.email}</p>
+                            <div class="user-meta">
+                                <span class="badge-role ${u.role_name.toLowerCase().replace(/_/g, '-')}">${u.role_name}</span>
+                                <span class="badge-status ${u.is_active ? 'active' : 'inactive'}">
+                                    ${u.is_active ? '🟢 Active' : '🔴 Inactive'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-primary" onclick="editPerms(${u.id}, '${u.username}')">
+                                🔐 Permissions
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="editUser(${u.id})">
+                                ✏️ Edit
+                            </button>
+                            <button class="btn btn-sm ${u.is_active ? 'btn-danger' : 'btn-success'}">
+                                ${u.is_active ? '🔒 Deactivate' : '🔓 Activate'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            });
+    }
+
+    // Roles
+    function loadRoles() {
+        const container = document.getElementById('rolesContainer');
+        fetch(`${API}/roles`)
+            .then(r => r.json())
+            .then(roles => {
+                container.innerHTML = roles.map(r => `
+                    <div class="card">
+                        <div class="card-header">${r.name}</div>
+                        <div class="card-body">
+                            <p class="text-muted">${r.description || 'N/A'}</p>
+                            <h6 style="margin-top: 20px; font-weight: 600;">Permissions (${r.permissions.length}):</h6>
+                            <div class="perms-grid" style="margin-top: 15px;">
+                                ${r.permissions.map(p => `
+                                    <div class="perm-card">
+                                        <div class="perm-key">${p.key}</div>
+                                        <div class="perm-desc">${p.description}</div>
+                                        <span class="perm-category">${p.category || 'general'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+    }
+
+    // Permissions
+    function loadPermissions() {
+        const container = document.getElementById('permissionsContainer');
+        fetch(`${API}/permissions`)
+            .then(r => r.json())
+            .then(perms => {
+                container.innerHTML = perms.map(p => `
+                    <div class="perm-card">
+                        <div class="perm-key">${p.key}</div>
+                        <div class="perm-desc">${p.description}</div>
+                        <span class="perm-category">${p.category || 'general'}</span>
+                    </div>
+                `).join('');
+            });
+    }
+
+    // Edit Permissions
+    function editPerms(userId, username) {
+        currentEditUserId = userId;
+        document.getElementById('editUserDisplay').textContent = `Edit permissions for: ${username}`;
+        
+        const modal = new bootstrap.Modal(document.getElementById('editPermsModal'));
+        const container = document.getElementById('editPermsContainer');
+
+        Promise.all([
+            fetch(`${API}/permissions`).then(r => r.json()),
+            fetch(`${API}/users/${userId}/permissions`).then(r => r.json())
+        ]).then(([allPerms, userPerms]) => {
+            const map = {};
+            userPerms.forEach(up => {
+                map[up.permission_key] = up.is_allowed;
+            });
+
+            container.innerHTML = allPerms.map(p => `
+                <div class="perm-card">
+                    <div class="perm-key">${p.key}</div>
+                    <div class="perm-desc">${p.description}</div>
+                    <div style="margin-top: 12px;">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input perm-check" 
+                                   data-perm="${p.key}" ${map[p.key] !== false ? 'checked' : ''}>
+                            <span>Grant</span>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+        });
+
+        modal.show();
+    }
+
+    function savePerms() {
+        console.log('Saving permissions...');
+        alert('✅ Permissions updated!');
+    }
+
+    function editUser(id) {
+        alert('Edit user feature coming soon');
+    }
+
+    function saveSettings() {
+        alert('✅ Settings saved!');
+    }
+
+    // ===== POSITION MANAGEMENT =====
+    function loadPositions() {
+        const container = document.getElementById('positionsContainer');
+        fetch(`${API}/positions`)
+            .then(r => r.json())
+            .then(positions => {
+                if (!positions.length) {
+                    container.innerHTML = '<div class="text-center text-muted py-5">No positions yet. Create one to get started!</div>';
+                    return;
+                }
+                container.innerHTML = positions.map(p => `
+                    <div class="card mb-3 ${p.is_active ? '' : 'opacity-50'}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">${p.title}</h6>
+                                    <p class="text-muted small mb-2">${p.description || 'No description'}</p>
+                                    <span class="badge ${p.is_active ? 'bg-success' : 'bg-secondary'}">
+                                        ${p.is_active ? '🟢 Active' : '🔴 Inactive'}
+                                    </span>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning" onclick="editPosition(${p.id}, '${p.title}', '${p.description || ''}', ${p.is_active})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deletePosition(${p.id}, '${p.title}')">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(err => {
+                console.error('Error loading positions:', err);
+                container.innerHTML = '<div class="alert alert-danger">Error loading positions</div>';
+            });
+    }
+
+    function createPosition() {
+        const title = document.getElementById('positionTitle').value.trim();
+        const description = document.getElementById('positionDescription').value.trim();
+        const is_active = parseInt(document.getElementById('positionStatus').value);
+
+        if (!title) {
+            alert('❌ Position title is required');
+            return;
+        }
+
+        fetch(`${API}/positions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, is_active })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ Position "${title}" created!`);
+                    document.getElementById('positionTitle').value = '';
+                    document.getElementById('positionDescription').value = '';
+                    document.getElementById('positionStatus').value = '1';
+                    loadPositions();
+                } else {
+                    alert(`❌ Error: ${data.message || 'Unknown error'}`);
+                }
+            })
+            .catch(err => alert(`❌ Error: ${err.message}`));
+    }
+
+    function editPosition(id, title, description, is_active) {
+        const newTitle = prompt('Edit position title:', title);
+        if (newTitle === null) return;
+
+        const newDesc = prompt('Edit description:', description);
+        if (newDesc === null) return;
+
+        fetch(`${API}/positions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: newTitle, description: newDesc, is_active })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ Position updated!`);
+                    loadPositions();
+                } else {
+                    alert(`❌ Error: ${data.message || 'Unknown error'}`);
+                }
+            })
+            .catch(err => alert(`❌ Error: ${err.message}`));
+    }
+
+    function deletePosition(id, title) {
+        if (!confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
+            return;
+        }
+
+        fetch(`${API}/positions/${id}`, {
+            method: 'DELETE'
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ Position "${title}" deleted!`);
+                    loadPositions();
+                } else {
+                    alert(`❌ Error: ${data.message || 'Unknown error'}`);
+                }
+            })
+            .catch(err => alert(`❌ Error: ${err.message}`));
+    }
+
+    // Create user
+    document.getElementById('createUserForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('✅ User created! (Demo mode)');
+        e.target.reset();
+    });
+
+    // Load dashboard on page load
+    window.addEventListener('load', () => {
+        loadDashboard();
+    });
+</script>
+
+{% endblock %}

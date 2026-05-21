@@ -1,0 +1,266 @@
+{% extends "base_employee.html" %}
+
+{% block title %}User Profile - Admin Panel{% endblock %}
+{% block container_class %}admin-user-profile-container{% endblock %}
+
+{% block extra_css %}
+<style>
+  .app-main {
+    background: #f7f7f7;
+    padding: 18px;
+  }
+
+  .admin-user-profile-container {
+    max-width: 1120px;
+    width: calc(100vw - 32px);
+    background: transparent;
+  }
+
+  .admin-profile-page {
+    min-height: calc(100vh - 150px);
+    padding: 20px;
+    border-radius: 34px;
+    background: #2d5689;
+  }
+
+  .admin-profile-panel {
+    min-height: 520px;
+    padding: 28px;
+    border-radius: 10px;
+    background: #bdcbda;
+  }
+
+  .admin-profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .admin-profile-title h1 {
+    margin: 0;
+    color: #173b62;
+    font-size: 31px;
+    line-height: 1.1;
+  }
+
+  .admin-profile-title p {
+    margin: 8px 0 0;
+    color: #335878;
+    font-weight: 700;
+  }
+
+  .admin-profile-back {
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 5px;
+    background: #244d80;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .admin-profile-back:hover {
+    background: #173b62;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .admin-profile-summary {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: 22px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #9aabba;
+    border-radius: 8px;
+    background: #f7fafc;
+  }
+
+  .admin-profile-avatar {
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: #dce8f3;
+    color: #173b62;
+    font-size: 48px;
+    font-weight: 900;
+  }
+
+  .admin-profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .admin-profile-name {
+    color: #173b62;
+    font-size: 30px;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-profile-email {
+    margin-top: 5px;
+    color: #51677a;
+    font-size: 16px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-profile-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .admin-profile-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #dce8f3;
+    color: #173b62;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .admin-profile-badge.inactive {
+    background: #f2d7dc;
+    color: #842032;
+  }
+
+  .admin-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .admin-profile-detail {
+    min-height: 80px;
+    padding: 14px;
+    border: 1px solid #9aabba;
+    border-radius: 8px;
+    background: #f7fafc;
+  }
+
+  .admin-profile-label {
+    color: #51677a;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .admin-profile-value {
+    margin-top: 7px;
+    color: #1f3650;
+    font-size: 16px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 760px) {
+    .admin-profile-header,
+    .admin-profile-summary {
+      grid-template-columns: 1fr;
+      flex-direction: column;
+    }
+
+    .admin-profile-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-profile-page">
+  <section class="admin-profile-panel">
+    <div class="admin-profile-header">
+      <div class="admin-profile-title">
+        <h1>User Profile</h1>
+        <p>Read-only SUPER_ADMIN view</p>
+      </div>
+      <a class="admin-profile-back" href="{{ url_for('admin_panel') }}">Back to Admin Panel</a>
+    </div>
+
+    <div class="admin-profile-summary">
+      <div class="admin-profile-avatar">
+        {% if profile.profile_picture_url %}
+          <img src="{{ profile.profile_picture_url }}" alt="Profile picture for {{ profile.username }}">
+        {% else %}
+          {{ (profile.username[:1] or 'U')|upper }}
+        {% endif %}
+      </div>
+      <div>
+        <div class="admin-profile-name">{{ profile.username }}</div>
+        <div class="admin-profile-email">{{ profile.email }}</div>
+        <div class="admin-profile-badges">
+          <span class="admin-profile-badge">{{ profile.role or 'No role' }}</span>
+          <span class="admin-profile-badge {{ '' if profile.is_active else 'inactive' }}">{{ 'Active' if profile.is_active else 'Locked' }}</span>
+          {% if profile.force_password_reset %}
+            <span class="admin-profile-badge inactive">Password reset required</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-profile-grid">
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Created By</div>
+        <div class="admin-profile-value">{{ profile.created_by or 'System' }}</div>
+      </div>
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Created At</div>
+        <div class="admin-profile-value" data-timestamp="{{ profile.created_at }}">{{ profile.created_at or '-' }}</div>
+      </div>
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Last Login</div>
+        <div class="admin-profile-value" data-timestamp="{{ profile.last_login }}">{{ profile.last_login or '-' }}</div>
+      </div>
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Last Seen</div>
+        <div class="admin-profile-value" data-timestamp="{{ profile.last_seen_at }}">{{ profile.last_seen_at or '-' }}</div>
+      </div>
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Assigned Positions</div>
+        <div class="admin-profile-value">{{ profile.assigned_positions|join(', ') if profile.assigned_positions else 'Unassigned' }}</div>
+      </div>
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Applicant Records</div>
+        <div class="admin-profile-value">{{ profile.applicants_count }}</div>
+      </div>
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Remarks Added</div>
+        <div class="admin-profile-value">{{ profile.remarks_count }}</div>
+      </div>
+      <div class="admin-profile-detail">
+        <div class="admin-profile-label">Active Session Started</div>
+        <div class="admin-profile-value" data-timestamp="{{ profile.session_started_at }}">{{ profile.session_started_at or '-' }}</div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('[data-timestamp]').forEach((element) => {
+    const value = element.dataset.timestamp;
+    if (!value || value === 'None') {
+      element.textContent = '-';
+      return;
+    }
+    const date = new Date(value);
+    element.textContent = Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  });
+</script>
+{% endblock %}

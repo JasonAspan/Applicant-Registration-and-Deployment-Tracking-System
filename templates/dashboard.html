@@ -1,0 +1,265 @@
+{% extends "base_employee.html" %}
+
+{% block title %}Dashboard - ATS{% endblock %}
+
+{% block container_class %}dashboard-container{% endblock %}
+
+{% block content %}
+  {% macro download_icon() -%}
+    <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 3v12"></path>
+      <path d="m7 10 5 5 5-5"></path>
+      <path d="M5 21h14"></path>
+    </svg>
+  {%- endmacro %}
+  {% macro trash_icon() -%}
+    <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M3 6h18"></path>
+      <path d="M8 6V4h8v2"></path>
+      <path d="M19 6l-1 15H6L5 6"></path>
+      <path d="M10 11v6"></path>
+      <path d="M14 11v6"></path>
+    </svg>
+  {%- endmacro %}
+  {% set total_pages = total_pages or 1 %}
+  {% set total_count = total_count or 0 %}
+  {% set page = page or 1 %}
+  {% set cv_state = namespace(has_cv=false) %}
+  {% for applicant in applicants or [] %}
+    {% if applicant.cv_data %}
+      {% set cv_state.has_cv = true %}
+    {% endif %}
+  {% endfor %}
+  <div class="dashboard-header-bar">
+    <div class="dashboard-header-left">
+      <h2>Dashboard</h2>
+    </div>
+    
+    <div class="dashboard-header-center">
+      <button type="button" class="filter-btn" id="toggle-filters">
+        <span class="filter-icon">⚙</span>
+        Filter
+      </button>
+      <form method="GET" action="{{ url_for('dashboard') }}" class="quick-search-form">
+        <div class="quick-search-field">
+          <input type="text" name="q" value="{{ filters.get('q', '') }}" placeholder="Search" class="quick-search-input" id="quick-search-input">
+          <a href="{{ url_for('dashboard') }}" class="quick-search-clear hidden" id="quick-search-clear" aria-label="Back to main dashboard" title="Back to main dashboard">x</a>
+        </div>
+        <input type="hidden" name="job_position" value="{{ filters.get('job_position', '') }}">
+        <input type="hidden" name="status" value="{{ filters.get('status', '') }}">
+        <input type="hidden" name="sort" value="{{ filters.get('sort', '') }}">
+        <input type="hidden" name="date_from" value="{{ filters.get('date_from', '') }}">
+        <input type="hidden" name="date_to" value="{{ filters.get('date_to', '') }}">
+        <button type="submit" class="search-btn">🔍</button>
+      </form>
+      {% if can_forward_applicants %}
+        <div class="forward-controls">
+          <select class="forward-user-select" name="target_user_id" form="batch-form" aria-label="Forward selected applicants to user">
+            <option value="">Forward to...</option>
+            {% for user in forward_users or [] %}
+              <option value="{{ user.id }}">{{ user.username }}{% if user.role_obj %} ({{ user.role_obj.name }}){% endif %}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="action-btn forward-btn" form="batch-form" formaction="{{ url_for('forward_applicants') }}" title="Forward Selected">
+            <span>↪</span> Forward
+          </button>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class="dashboard-header-right">
+      {% if applicants %}
+        <button type="button" class="action-btn refresh-btn" id="refresh-list" title="Refresh List">
+          <span>🔄</span> Refresh
+        </button>
+        {% if can_export_applicant_cv and cv_state.has_cv %}
+        <button type="submit" class="action-btn export-btn" form="batch-form" formaction="{{ url_for('batch_export_cvs') }}" data-batch-action="export CV" title="Export CVs">
+          {{ download_icon() }} Export CV
+        </button>
+        {% endif %}
+        {% if can_export_applicant_excel %}
+        <button type="submit" class="action-btn export-btn" form="batch-form" formaction="{{ url_for('export_applicants_excel') }}" data-batch-action="export Excel" title="Export selected applicants to Excel">
+          <span>Export Excel</span>
+        </button>
+        {% endif %}
+        {% if can_delete_applicants %}
+        <button type="submit" class="action-btn delete-btn" form="batch-form" formaction="{{ url_for('batch_delete_applicants') }}" data-batch-action="delete" title="Delete Selected">
+          {{ trash_icon() }} Delete
+        </button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="filter-wrap">
+    <form method="GET" action="{{ url_for('dashboard') }}">
+      <div class="filter-dropdown hidden" id="filter-dropdown">
+        <div class="form-group">
+          <label for="job_position">Job Position</label>
+          <select id="job_position" name="job_position">
+            <option value="">All</option>
+            {% for pos in (job_positions or []) %}
+              <option value="{{ pos }}" {% if filters and filters.job_position == pos %}selected{% endif %}>{{ pos }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Applicant Status</label>
+          <select id="status" name="status">
+            <option value="">All Statuses</option>
+            <option value="Pending" {% if filters and filters.status == 'Pending' %}selected{% endif %}>OPEN</option>
+            <option value="Lined-up" {% if filters and filters.status == 'Lined-up' %}selected{% endif %}>Lined-up</option>
+            <option value="Short-listed" {% if filters and filters.status == 'Short-listed' %}selected{% endif %}>Short-listed</option>
+            <option value="Selected" {% if filters and filters.status == 'Selected' %}selected{% endif %}>Selected</option>
+            <option value="Deployed" {% if filters and filters.status == 'Deployed' %}selected{% endif %}>Deployed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sort">Sort</label>
+          <select id="sort" name="sort">
+            <option value="applied_desc" {% if not filters or filters.sort == 'applied_desc' %}selected{% endif %}>Timestamp (newest)</option>
+            <option value="applied_asc" {% if filters and filters.sort == 'applied_asc' %}selected{% endif %}>Timestamp (oldest)</option>
+            <option value="name_asc" {% if filters and filters.sort == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+            <option value="name_desc" {% if filters and filters.sort == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+          </select>
+        </div>
+
+        <div class="filter-date-row">
+          <div class="form-group">
+            <label for="date_from">From</label>
+            <input type="date" id="date_from" name="date_from" value="{{ filters.get('date_from', '') }}">
+          </div>
+
+          <div class="form-group">
+            <label for="date_to">To</label>
+            <input type="date" id="date_to" name="date_to" value="{{ filters.get('date_to', '') }}">
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Clear Filters</a>
+          <button type="submit" class="btn">Apply Filters</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  {% if applicants %}
+    <form method="POST" id="batch-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="q" value="{{ filters.get('q', '') }}">
+      <input type="hidden" name="job_position" value="{{ filters.get('job_position', '') }}">
+      <input type="hidden" name="status" value="{{ filters.get('status', '') }}">
+      <input type="hidden" name="sort" value="{{ filters.get('sort', '') }}">
+      <input type="hidden" name="date_from" value="{{ filters.get('date_from', '') }}">
+      <input type="hidden" name="date_to" value="{{ filters.get('date_to', '') }}">
+      <div class="dashboard-table-scroll">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th class="checkbox-col"><input type="checkbox" id="select-all-table"></th>
+            <th>Time Stamp</th>
+            <th>Full Name</th>
+            <th>Position</th>
+            <th>E-mail</th>
+            <th>Contact Number</th>
+            <th>Age</th>
+              <th>Birth Date</th>
+              <th>Gender</th>
+              <th class="status-col">Status</th>
+              <th class="remarks-col">Remarks</th>
+              <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for applicant in applicants %}
+          <tr>
+            <td class="checkbox-col"><input type="checkbox" name="applicant_ids" value="{{ applicant.id }}"></td>
+            <td>{{ applicant.applied_at.strftime('%m/%d/%Y: %H:%M') }}</td>
+            <td>{{ applicant.full_name }}</td>
+            <td>{{ applicant.job_position }}</td>
+            <td>{{ applicant.email }}</td>
+            <td>{{ applicant.contact_number }}</td>
+              <td>{{ applicant.age or '-' }}</td>
+              <td>{{ applicant.birth_date.strftime('%m/%d/%Y') if applicant.birth_date else '-' }}</td>
+              <td>{{ applicant.gender or '-' }}</td>
+              <td class="status-col">
+                {% if applicant.remarked_by_id %}
+                  {% set can_update_status = applicant.remarked_by_id == current_user.id or (current_user.role_obj and current_user.role_obj.name == 'SUPER_ADMIN') %}
+                  {% set current_status = applicant.status if applicant.status in ['Lined-up', 'Short-listed', 'Selected', 'Deployed'] else 'Lined-up' %}
+                  <select
+                    class="applicant-status-select"
+                    data-status-action="{{ url_for('update_applicant_status', applicant_id=applicant.id) }}"
+                    aria-label="Applicant status"
+                    {% if not can_update_status %}disabled{% endif %}
+                  >
+                    {% for status in ['Lined-up', 'Short-listed', 'Selected', 'Deployed'] %}
+                      <option value="{{ status }}" {% if current_status == status %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                  </select>
+                {% else %}
+                  <span class="status-open">OPEN</span>
+                {% endif %}
+              </td>
+              <td class="remarks-col">
+                {% if applicant.remarked_by %}
+                  <span class="remark-owner">{{ applicant.remarked_by.username }}</span>
+                  {% if applicant.remarked_by_id == current_user.id or (current_user.role_obj and current_user.role_obj.name in ['SUPER_ADMIN', 'ADMIN']) %}
+                    <button type="submit" class="remark-btn undo" formaction="{{ url_for('undo_applicant_remark', applicant_id=applicant.id) }}">Undo</button>
+                  {% endif %}
+                {% else %}
+                  <span class="remark-owner none">none</span>
+                  <button type="submit" class="remark-btn" formaction="{{ url_for('remark_applicant', applicant_id=applicant.id) }}">Add</button>
+                {% endif %}
+              </td>
+              <td class="actions-col">
+              {% if can_export_applicant_cv and applicant.cv_data %}
+                <a href="{{ url_for('download_applicant_cv', applicant_id=applicant.id) }}" class="action-link" title="Download CV" aria-label="Download CV">{{ download_icon() }}</a>
+              {% endif %}
+              {% if can_delete_applicants %}
+              <button type="submit" class="action-link delete-link" formaction="{{ url_for('batch_delete_applicants') }}" data-batch-action="delete" title="Delete Selected" aria-label="Delete selected applicants">{{ trash_icon() }}</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      
+      {% if total_pages > 1 %}
+        <div class="pagination-controls">
+          <div class="pagination-info">
+            Showing {{ applicants|length }} of {{ total_count }} applicants (Page {{ page }} of {{ total_pages }})
+          </div>
+          <div class="pagination-buttons">
+            {% if page > 1 %}
+              <a href="{{ url_for('dashboard', q=filters.get('q', ''), job_position=filters.get('job_position', ''), status=filters.get('status', ''), sort=filters.get('sort', ''), date_from=filters.get('date_from', ''), date_to=filters.get('date_to', ''), page=1) }}" class="page-btn">« First</a>
+              <a href="{{ url_for('dashboard', q=filters.get('q', ''), job_position=filters.get('job_position', ''), status=filters.get('status', ''), sort=filters.get('sort', ''), date_from=filters.get('date_from', ''), date_to=filters.get('date_to', ''), page=page-1) }}" class="page-btn">‹ Previous</a>
+            {% endif %}
+            
+            {% set start_page = page - 2 if page - 2 > 0 else 1 %}
+            {% set end_page = page + 2 if page + 2 <= total_pages else total_pages %}
+            {% for p in range(start_page, end_page + 1) %}
+              {% if p == page %}
+                <span class="page-btn active">{{ p }}</span>
+              {% else %}
+                <a href="{{ url_for('dashboard', q=filters.get('q', ''), job_position=filters.get('job_position', ''), status=filters.get('status', ''), sort=filters.get('sort', ''), date_from=filters.get('date_from', ''), date_to=filters.get('date_to', ''), page=p) }}" class="page-btn">{{ p }}</a>
+              {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+              <a href="{{ url_for('dashboard', q=filters.get('q', ''), job_position=filters.get('job_position', ''), status=filters.get('status', ''), sort=filters.get('sort', ''), date_from=filters.get('date_from', ''), date_to=filters.get('date_to', ''), page=page+1) }}" class="page-btn">Next ›</a>
+              <a href="{{ url_for('dashboard', q=filters.get('q', ''), job_position=filters.get('job_position', ''), status=filters.get('status', ''), sort=filters.get('sort', ''), date_from=filters.get('date_from', ''), date_to=filters.get('date_to', ''), page=total_pages) }}" class="page-btn">Last »</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </form>
+  {% else %}
+    <div class="empty-state">
+      <p>No applicants yet.</p>
+    </div>
+  {% endif %}
+{% endblock %}

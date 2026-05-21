@@ -1,0 +1,13 @@
+{% extends "base_applicant.html" %}
+
+{% block title %}Applicant - ATS{% endblock %}
+
+{% block content %}
+  <h1>Applicant Page</h1>
+  <p style="text-align: center; margin-bottom: 30px; color: #666;">
+    Submit your application here.
+  </p>
+
+  <a class="btn" href="{{ url_for('applicant_register') }}">Apply Now</a>
+{% endblock %}
+

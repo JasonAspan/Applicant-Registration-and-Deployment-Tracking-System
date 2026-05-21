@@ -1,0 +1,298 @@
+{% extends "base_employee.html" %}
+
+{% block title %}Employee Register - ATS{% endblock %}
+
+{% block container_class %}employee-auth-container{% endblock %}
+
+{% block extra_css %}
+<style>
+  .app-main {
+    padding: 28px 20px 34px;
+    background: #f8f8f8;
+  }
+
+  .header-content {
+    position: relative;
+    max-width: none;
+    min-height: 84px;
+    padding: 10px 28px 12px;
+    justify-content: flex-start;
+  }
+
+  .header-logo {
+    margin-right: 0;
+  }
+
+  .header-logo-img {
+    height: 72px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .header-title {
+    position: absolute;
+    left: 50%;
+    width: min(470px, calc(100vw - 40px));
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  .header-title h1 {
+    font-size: 19px;
+    font-weight: 700;
+    color: #17467a;
+  }
+
+  .header-menu {
+    width: 72px;
+    visibility: hidden;
+  }
+
+  .employee-auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background: transparent;
+  }
+
+  .employee-auth-card {
+    width: min(470px, 100%);
+    padding: 30px 42px 34px;
+    background: #2c5688;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    box-shadow: 0 18px 40px rgba(44, 86, 136, 0.22);
+  }
+
+  .employee-auth-icon {
+    width: 104px;
+    height: 104px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+    flex: 0 0 auto;
+  }
+
+  .employee-auth-icon::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 4px solid #050505;
+    border-radius: 50%;
+    background: white;
+  }
+
+  .employee-auth-icon::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 21px;
+    width: 45px;
+    height: 45px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: #2c5688;
+    box-shadow: 0 51px 0 20px #2c5688;
+  }
+
+  .employee-auth-heading {
+    margin: 0 0 22px;
+    text-align: center;
+  }
+
+  .employee-auth-heading h2 {
+    margin: 0;
+    color: white;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .employee-auth-heading p {
+    margin: 7px 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .employee-auth-form {
+    width: 100%;
+  }
+
+  .employee-auth-field {
+    margin-bottom: 14px;
+  }
+
+  .employee-password-wrap {
+    position: relative;
+  }
+
+  .employee-auth-field input {
+    width: 100%;
+    height: 48px;
+    padding: 10px 14px;
+    border: 2px solid #050505;
+    border-radius: 8px;
+    background: white;
+    color: #173b62;
+    font-size: 16px;
+    font-weight: 700;
+    outline: none;
+  }
+
+  .employee-auth-field input:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28);
+  }
+
+  .employee-password-wrap input {
+    padding-right: 76px;
+  }
+
+  .password-toggle {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 60px;
+    height: 36px;
+    border: 0;
+    border-radius: 6px;
+    background: #eef3f6;
+    color: #2c5688;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .password-toggle:hover {
+    background: #e6e6e6;
+  }
+
+  .employee-auth-field label {
+    display: block;
+    margin: 0 0 7px;
+    color: white;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: left;
+    text-transform: none;
+  }
+
+  .employee-auth-card .btn {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 4px;
+    background: white;
+    color: #2c5688;
+    border: 0;
+    border-radius: 8px;
+    font-size: 17px;
+    font-weight: 800;
+    text-transform: none;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .employee-auth-card .btn:hover {
+    background: #eef3f6;
+  }
+
+  .employee-auth-link {
+    margin-top: 20px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    text-transform: none;
+  }
+
+  .employee-auth-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 720px) {
+    .employee-auth-card {
+      padding: 28px 24px 32px;
+      border-radius: 20px;
+    }
+
+    .employee-auth-icon {
+      width: 94px;
+      height: 94px;
+      margin-bottom: 16px;
+    }
+
+    .employee-auth-icon::after {
+      top: 19px;
+      width: 40px;
+      height: 40px;
+      box-shadow: 0 46px 0 18px #2c5688;
+    }
+
+    .header-logo-img {
+      height: 58px;
+    }
+
+    .header-content {
+      min-height: 72px;
+    }
+
+    .header-menu {
+      width: 58px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="employee-auth-card">
+    <div class="employee-auth-icon" aria-hidden="true"></div>
+    <div class="employee-auth-heading">
+      <h2>Employee Register</h2>
+      <p>Create your employee access account</p>
+    </div>
+
+    <form method="POST" id="employee-register-form" class="employee-auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="employee-auth-field">
+        <label for="username">username</label>
+        <input type="text" id="username" name="username" autocomplete="username" required>
+      </div>
+
+      <div class="employee-auth-field">
+        <label for="password">password</label>
+        <div class="employee-password-wrap">
+          <input type="password" id="password" name="password" minlength="6" autocomplete="new-password" required>
+          <button type="button" class="password-toggle" data-password-toggle="password">See</button>
+        </div>
+      </div>
+
+      <div class="employee-auth-field">
+        <label for="email">email optional</label>
+        <input type="email" id="email" name="email" autocomplete="email">
+      </div>
+
+      <button type="submit" class="btn">register</button>
+    </form>
+
+    <a href="{{ url_for('employee_login') }}" class="employee-auth-link">already have an account? login</a>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.passwordToggle);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      button.textContent = isHidden ? 'Hide' : 'See';
+    });
+  });
+</script>
+{% endblock %}
+

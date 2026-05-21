@@ -1,0 +1,12 @@
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Werkzeug==3.0.3
+psycopg2-binary
+python-dotenv==1.0.1
+WTForms==3.1.2
+bcrypt==4.1.2
+PyJWT==2.8.0
+tzdata
+pytest==8.3.4

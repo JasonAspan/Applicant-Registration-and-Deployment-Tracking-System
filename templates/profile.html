@@ -1,0 +1,470 @@
+{% extends "base_employee.html" %}
+
+{% block title %}Profile - ATS{% endblock %}
+{% block container_class %}profile-container{% endblock %}
+
+{% block content %}
+{% if is_profile_analytics_user %}
+  <section class="profile-analytics-shell" data-profile-analytics>
+    <aside class="profile-analytics-side">
+      <div class="profile-analytics-card profile-photo-card">
+        <div class="profile-analytics-avatar">
+          {% if current_user.profile_data %}
+            <img src="{{ url_for('profile_picture') }}" alt="Profile picture">
+          {% else %}
+            <div class="avatar-fallback">{{ (current_user.username[:1] or 'U')|upper }}</div>
+          {% endif %}
+        </div>
+        <form class="profile-upload-form compact" method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label for="profile_picture">Edit picture</label>
+          <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required>
+          <button type="submit" class="profile-action full">Upload</button>
+        </form>
+      </div>
+
+      <div class="profile-analytics-card">
+        <form class="profile-team-form" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="profile_action" value="team">
+          <label for="profile_team">Team</label>
+          <div class="profile-team-control">
+            <input type="text" id="profile_team" name="team" value="{{ team_label }}" placeholder="ex. team: Australia">
+            <button type="submit" class="profile-action">Save</button>
+          </div>
+        </form>
+        <div class="profile-info-row">
+          <span>User Restriction / Role</span>
+          <strong>{{ role_label }}</strong>
+        </div>
+        <div class="profile-info-row">
+          <span>Team</span>
+          <strong>{{ team_label or 'Unassigned' }}</strong>
+        </div>
+        <div class="profile-info-row">
+          <span>{% if analytics.mode == 'level_user_profiles' %}Tracked Users{% else %}Assigned Positions{% endif %}</span>
+          <strong>
+            {% if analytics.mode == 'level_user_profiles' %}
+              {{ analytics.source_users_count }} Level 1/2 users
+            {% else %}
+              {{ assigned_positions|join(', ') if assigned_positions else 'No assigned positions' }}
+            {% endif %}
+          </strong>
+        </div>
+        <div class="profile-info-row">
+          <span>Permissions</span>
+          <strong>{{ permission_keys|length }} active</strong>
+        </div>
+        <div class="profile-info-row">
+          <span>Recent login</span>
+          <strong>{{ current_user.last_login.strftime('%b %d, %Y %I:%M %p') if current_user.last_login else 'No record' }}</strong>
+        </div>
+        <div class="profile-info-row">
+          <span>Session started</span>
+          <strong>{{ current_user.session_started_at.strftime('%b %d, %Y %I:%M %p') if current_user.session_started_at else 'No record' }}</strong>
+        </div>
+      </div>
+
+      {% if has_profile_todos %}
+        <div class="profile-analytics-card todo-card">
+          <div class="profile-panel-heading">
+            <h2>To-do ({{ profile_todos|length }})</h2>
+          </div>
+          <form class="todo-add-form" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="profile_action" value="todo">
+            <input type="hidden" name="todo_action" value="add">
+            <button type="submit" aria-label="Add to-do">+</button>
+            <input type="text" name="todo_text" maxlength="255" placeholder="Add a to-do" required>
+          </form>
+          <div class="todo-list">
+            {% for todo in profile_todos %}
+              <div class="todo-item {{ 'done' if todo.is_done else '' }}">
+                <form class="todo-toggle-form" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="profile_action" value="todo">
+                  <input type="hidden" name="todo_action" value="toggle">
+                  <input type="hidden" name="todo_id" value="{{ todo.id }}">
+                  <button type="submit" class="todo-checkbox" aria-label="Toggle to-do">{{ '✓' if todo.is_done else '' }}</button>
+                </form>
+                <div class="todo-content">
+                  <div class="todo-display">
+                    <span>{{ todo.text }}</span>
+                    <div class="todo-actions">
+                      <button type="button" data-edit-todo="{{ todo.id }}">Edit</button>
+                      <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="profile_action" value="todo">
+                        <input type="hidden" name="todo_action" value="delete">
+                        <input type="hidden" name="todo_id" value="{{ todo.id }}">
+                        <button type="submit">Delete</button>
+                      </form>
+                    </div>
+                  </div>
+                  <form class="todo-edit-form hidden" method="POST" data-todo-edit-form="{{ todo.id }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="profile_action" value="todo">
+                    <input type="hidden" name="todo_action" value="update">
+                    <input type="hidden" name="todo_id" value="{{ todo.id }}">
+                    <input type="text" name="todo_text" value="{{ todo.text }}" maxlength="255" required>
+                    <button type="submit">Save</button>
+                    <button type="button" data-cancel-todo="{{ todo.id }}">Cancel</button>
+                  </form>
+                </div>
+              </div>
+            {% else %}
+              <p class="profile-muted">No to-do items yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </aside>
+
+    <section class="profile-analytics-main">
+      <div class="profile-analytics-heading">
+        <div>
+          <div class="profile-eyebrow">{% if analytics.mode == 'level_user_profiles' %}Level 1/2 Profile Analytics{% else %}Profile Analytics{% endif %}</div>
+          <h1>{{ current_user.username }}</h1>
+          <p>{{ current_user.email }}</p>
+        </div>
+        <a class="profile-action secondary" href="{{ url_for('dashboard') }}">Dashboard</a>
+      </div>
+
+      <div class="analytics-summary-grid">
+        <div class="analytics-summary-card">
+          <span>Overall Applicant</span>
+          <strong>{{ analytics.counts.overall }}</strong>
+        </div>
+        <div class="analytics-summary-card">
+          <span>Lined-up</span>
+          <strong>{{ analytics.counts['Lined-up'] }}</strong>
+        </div>
+        <div class="analytics-summary-card">
+          <span>Shortlisted</span>
+          <strong>{{ analytics.counts.Shortlisted }}</strong>
+        </div>
+        <div class="analytics-summary-card">
+          <span>Selected</span>
+          <strong>{{ analytics.counts.Selected }}</strong>
+        </div>
+        <div class="analytics-summary-card">
+          <span>Deployed</span>
+          <strong>{{ analytics.counts.Deployed }}</strong>
+        </div>
+      </div>
+
+      <form class="analytics-filter-bar" method="GET" action="{{ url_for('profile') }}">
+        <label>
+          <span>Status</span>
+          <select name="status">
+            <option value="">All Statuses</option>
+            {% for status in analytics.status_options %}
+              <option value="{{ status }}" {% if analytics.filters.status == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Date From</span>
+          <input type="date" name="date_from" value="{{ analytics.filters.date_from }}">
+        </label>
+        <label>
+          <span>Date To</span>
+          <input type="date" name="date_to" value="{{ analytics.filters.date_to }}">
+        </label>
+        <button type="submit" class="profile-action">Apply</button>
+        <a class="profile-action secondary" href="{{ url_for('profile') }}">Revert Filters</a>
+        <a class="profile-action secondary" href="{{ url_for('export_profile_analytics', status=analytics.filters.status, date_from=analytics.filters.date_from, date_to=analytics.filters.date_to) }}">Export PDF</a>
+      </form>
+
+      <div class="analytics-chart-grid">
+        <div class="profile-analytics-card">
+          <div class="profile-panel-heading">
+            <h2>{{ analytics.bar_chart_title }}</h2>
+          </div>
+          <div class="analytics-legend">
+            {% for status in analytics.status_options %}
+              <span><i class="status-color status-{{ loop.index }}"></i>{{ status }}</span>
+            {% endfor %}
+          </div>
+          <div class="grouped-bar-chart">
+            {% for item in analytics.position_chart %}
+              <div class="bar-row">
+                <div class="bar-label">{{ item.position }}</div>
+                <div class="bar-groups">
+                  {% for status in analytics.status_options %}
+                    {% set count = item.counts[status] %}
+                    {% set max_count = analytics.max_position_count or 1 %}
+                    {% set bar_colors = ['#334155', '#1d4ed8', '#6d28d9', '#15803d', '#b91c1c'] %}
+                    {% set bar_height = (52 + (count / max_count * 168)) if count else 0 %}
+                    <div class="bar-segment status-bg-{{ loop.index }} {{ 'has-value' if count else '' }}" style="height: {{ bar_height|round(0, 'floor') }}px; background: {{ bar_colors[loop.index0] }};" title="{{ status }}: {{ count }}">
+                      {% if count %}<span>{{ count }}</span>{% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% else %}
+              <p class="profile-muted">No applicant data for the selected filters.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if show_movement_analytics %}
+          <div class="profile-analytics-card">
+            <div class="profile-panel-heading">
+              <h2>{{ analytics.movement_title }}</h2>
+            </div>
+            <canvas id="profileMovementChart" class="movement-chart" width="720" height="280" aria-label="Applicant movement line chart"></canvas>
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  </section>
+{% else %}
+  <section class="profile-shell">
+    <div class="profile-hero">
+      <div class="profile-identity">
+        <div class="profile-avatar avatar">
+          {% if current_user.profile_data %}
+            <img src="{{ url_for('profile_picture') }}" alt="Profile picture">
+          {% else %}
+            <div class="avatar-fallback">{{ (current_user.username[:1] or 'U')|upper }}</div>
+          {% endif %}
+        </div>
+        <div class="profile-title-group">
+          <div class="profile-eyebrow">User Profile</div>
+          <h1>{{ current_user.username }}</h1>
+          <div class="profile-meta">
+            <span>{{ current_user.email }}</span>
+            <span>{{ role_label }}</span>
+            <span>{{ 'Active' if current_user.is_active else 'Inactive' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <a class="profile-action secondary" href="{{ url_for('dashboard') }}">Dashboard</a>
+        {% if has_permission(current_user, 'access_admin_panel') %}
+          <a class="profile-action" href="{{ url_for('admin_panel') }}">Admin Panel</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <aside class="profile-side">
+        <div class="profile-panel profile-completion">
+          <div class="profile-panel-heading">
+            <h2>Profile Completion</h2>
+            <strong>{{ profile_completion }}%</strong>
+          </div>
+          <div class="profile-progress" aria-label="Profile completion">
+            <span style="width: {{ profile_completion }}%;"></span>
+          </div>
+          <ul class="profile-checklist">
+            <li class="{{ 'done' if current_user.profile_data else '' }}">Profile photo</li>
+            <li class="done">Email address</li>
+            <li class="{{ 'done' if current_user.role_id else '' }}">Role assignment</li>
+            <li class="{{ 'done' if assigned_positions or role_name in ['SUPER_ADMIN', 'ADMIN'] else '' }}">Position access</li>
+          </ul>
+        </div>
+
+        <div class="profile-panel">
+          <div class="profile-panel-heading">
+            <h2>Photo</h2>
+          </div>
+          <form class="profile-upload-form" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="profile_picture">Upload profile picture</label>
+            <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required>
+            <button type="submit" class="profile-action full">Save Photo</button>
+            <p>Max 2MB. JPG, PNG, WEBP, or GIF.</p>
+          </form>
+        </div>
+
+        <div class="profile-panel">
+          <div class="profile-panel-heading">
+            <h2>Security</h2>
+          </div>
+          <div class="profile-security-row">
+            <span>Account status</span>
+            <strong>{{ 'Active' if current_user.is_active else 'Inactive' }}</strong>
+          </div>
+          <div class="profile-security-row">
+            <span>Password reset</span>
+            <strong>{{ 'Required' if current_user.force_password_reset else 'Not required' }}</strong>
+          </div>
+          <div class="profile-security-row">
+            <span>Last login</span>
+            <strong>{{ current_user.last_login.strftime('%b %d, %Y') if current_user.last_login else 'No record' }}</strong>
+          </div>
+        </div>
+      </aside>
+
+      <section class="profile-main">
+        <div class="profile-panel role-panel">
+          <div>
+            <div class="profile-eyebrow">Role-Based Dashboard</div>
+            <h2>{{ role_label }}</h2>
+            <p>{{ role_description }}</p>
+          </div>
+          <div class="role-badge">{{ role_name.replace('_', ' ') }}</div>
+        </div>
+
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <span>Visible Applicants</span>
+            <strong>{{ profile_stats.assigned_count }}</strong>
+          </div>
+          <div class="profile-stat">
+            <span>Pending</span>
+            <strong>{{ profile_stats.pending_count }}</strong>
+          </div>
+          <div class="profile-stat">
+            <span>Reviewed</span>
+            <strong>{{ profile_stats.reviewed_count }}</strong>
+          </div>
+          <div class="profile-stat">
+            <span>Forwarded</span>
+            <strong>{{ profile_stats.forwarded_count }}</strong>
+          </div>
+        </div>
+
+        <div class="profile-two-col">
+          <div class="profile-panel">
+            <div class="profile-panel-heading">
+              <h2>Quick Tasks</h2>
+            </div>
+            <div class="task-list">
+              {% for task in role_tasks %}
+                <button type="button">{{ task }}</button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="profile-panel">
+            <div class="profile-panel-heading">
+              <h2>Position Access</h2>
+            </div>
+            {% if assigned_positions %}
+              <div class="position-tags">
+                {% for position in assigned_positions %}
+                  <span>{{ position }}</span>
+                {% endfor %}
+              </div>
+            {% elif role_name in ['SUPER_ADMIN', 'ADMIN'] %}
+              <p class="profile-muted">Can view all applicant positions.</p>
+            {% else %}
+              <p class="profile-muted">No assigned positions yet.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="profile-two-col">
+          <div class="profile-panel">
+            <div class="profile-panel-heading">
+              <h2>Permissions</h2>
+              <strong>{{ permission_keys|length }}</strong>
+            </div>
+            <div class="permission-list">
+              {% for permission in permission_keys[:8] %}
+                <span>{{ permission.replace('_', ' ') }}</span>
+              {% endfor %}
+              {% if permission_keys|length > 8 %}
+                <span>+{{ permission_keys|length - 8 }} more</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="profile-panel">
+            <div class="profile-panel-heading">
+              <h2>Recent Activity</h2>
+            </div>
+            <div class="activity-list">
+              {% for item in mock_activity %}
+                <div>
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value.strftime('%b %d, %Y %I:%M %p') if item.value else 'No record' }}</strong>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+  {% if has_profile_todos %}
+    <script>
+      (() => {
+        document.querySelectorAll('[data-edit-todo]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const id = button.dataset.editTodo;
+            const form = document.querySelector(`[data-todo-edit-form="${id}"]`);
+            if (!form) return;
+            form.classList.remove('hidden');
+            const input = form.querySelector('input[name="todo_text"]');
+            if (input) input.focus();
+          });
+        });
+        document.querySelectorAll('[data-cancel-todo]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const form = document.querySelector(`[data-todo-edit-form="${button.dataset.cancelTodo}"]`);
+            if (form) form.classList.add('hidden');
+          });
+        });
+      })();
+    </script>
+  {% endif %}
+  {% if is_profile_analytics_user and show_movement_analytics %}
+    <script>
+      (() => {
+        const canvas = document.getElementById('profileMovementChart');
+        if (!canvas) return;
+        const rows = {{ analytics.movement_chart|tojson }};
+        const statuses = {{ analytics.status_options|list|tojson }};
+        const colors = ['#64748b', '#2563eb', '#7c3aed', '#16a34a', '#dc2626'];
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const pad = 34;
+        ctx.clearRect(0, 0, width, height);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i += 1) {
+          const y = pad + ((height - pad * 2) / 4) * i;
+          ctx.beginPath();
+          ctx.moveTo(pad, y);
+          ctx.lineTo(width - pad, y);
+          ctx.stroke();
+        }
+        if (!rows.length) {
+          ctx.fillStyle = '#718096';
+          ctx.font = '14px Segoe UI, sans-serif';
+          ctx.fillText('No applicant data for the selected filters.', pad, height / 2);
+          return;
+        }
+        const max = Math.max(1, ...rows.flatMap(row => statuses.map(status => row.counts[status] || 0)));
+        statuses.forEach((status, statusIndex) => {
+          ctx.strokeStyle = colors[statusIndex] || '#2c5282';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          rows.forEach((row, index) => {
+            const x = rows.length === 1 ? width / 2 : pad + ((width - pad * 2) / (rows.length - 1)) * index;
+            const y = height - pad - (((row.counts[status] || 0) / max) * (height - pad * 2));
+            if (index === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        });
+        ctx.fillStyle = '#4a5568';
+        ctx.font = '12px Segoe UI, sans-serif';
+        rows.forEach((row, index) => {
+          const x = rows.length === 1 ? width / 2 : pad + ((width - pad * 2) / (rows.length - 1)) * index;
+          ctx.fillText(row.date.slice(5), x - 15, height - 8);
+        });
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

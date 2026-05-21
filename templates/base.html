@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ATS - Applicant Tracking System{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260513-no-loader">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="container {% block container_class %}{% endblock %}">
+    <div class="brand-header">
+      <img src="{{ url_for('static', filename='img/company-logo.png') }}" class="company-logo" alt="Company logo">
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('applicant_register') }}">Applicant Register</a>
+      <a href="{{ url_for('employee_register') }}">Employee Register</a>
+      <a href="{{ url_for('employee_login') }}">Employee Login</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}">Dashboard</a> |
+        <a href="{{ url_for('logout') }}">Logout ({{ current_user.username }})</a>
+      {% else %}
+        <a href="{{ url_for('employee_login') }}">Dashboard</a>
+      {% endif %}
+    </div>
+  </div>
+
+<script src="{{ url_for('static', filename='js/script-fixed.js') }}?v=20260513-centered-alert"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
+
