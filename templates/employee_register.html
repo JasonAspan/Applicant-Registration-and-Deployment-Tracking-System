@@ -6,71 +6,141 @@
 
 {% block extra_css %}
 <style>
+  body {
+    min-height: 100vh;
+    background: url("{{ url_for('static', filename='img/employee-auth-bg.png') }}") center center / cover fixed no-repeat;
+  }
+
+  .app-wrapper {
+    min-height: 100vh;
+  }
+
+  .app-header,
+  .app-footer {
+    display: none;
+  }
+
   .app-main {
-    padding: 28px 20px 34px;
-    background: #f8f8f8;
-  }
-
-  .header-content {
-    position: relative;
-    max-width: none;
-    min-height: 84px;
-    padding: 10px 28px 12px;
-    justify-content: flex-start;
-  }
-
-  .header-logo {
-    margin-right: 0;
-  }
-
-  .header-logo-img {
-    height: 72px;
-    width: auto;
-    object-fit: contain;
-  }
-
-  .header-title {
-    position: absolute;
-    left: 50%;
-    width: min(470px, calc(100vw - 40px));
-    transform: translateX(-50%);
-    text-align: center;
-  }
-
-  .header-title h1 {
-    font-size: 19px;
-    font-weight: 700;
-    color: #17467a;
-  }
-
-  .header-menu {
-    width: 72px;
-    visibility: hidden;
+    min-height: 100vh;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    align-items: stretch;
   }
 
   .employee-auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    padding: 0;
     background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    display: grid;
+    grid-template-columns: minmax(420px, 52%) minmax(360px, 48%);
+    align-items: center;
+    gap: 36px;
+  }
+
+  .employee-auth-intro {
+    min-height: 100vh;
+    padding: 22px 30px 34px;
+    background: rgba(255, 255, 255, 0.66);
+    color: #23176c;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: authFadeFromLeft 0.72s ease-out both;
+  }
+
+  .employee-auth-brand {
+    width: min(540px, 92%);
+    margin: 0 auto 30px;
+    animation: authFadeFront 0.64s ease-out 0.12s both;
+  }
+
+  .employee-auth-brand img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .employee-auth-intro h1 {
+    width: min(610px, 100%);
+    margin: 0 0 8px;
+    color: #24186d;
+    font-size: 60px;
+    font-weight: 400;
+    line-height: 0.94;
+    text-align: left;
+    animation: authFadeFromRight 0.68s ease-out 0.16s both;
+  }
+
+  .employee-auth-subtitle {
+    margin: 0 0 8px;
+    color: #24186d;
+    font-size: 27px;
+    font-weight: 400;
+    line-height: 1.15;
+    animation: authFadeFromLeft 0.68s ease-out 0.24s both;
+  }
+
+  .employee-auth-lead {
+    width: min(600px, 100%);
+    margin: 0 auto 14px;
+    color: #24186d;
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.14;
+    animation: authFadeFromRight 0.68s ease-out 0.32s both;
+  }
+
+  .employee-auth-copy {
+    width: min(600px, 100%);
+    margin: 0 auto 14px;
+    color: #24186d;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.08;
+    animation: authFadeFromLeft 0.68s ease-out 0.4s both;
+  }
+
+  .employee-auth-closing {
+    width: min(540px, 100%);
+    margin: 0 auto;
+    color: #24186d;
+    font-size: 23px;
+    font-weight: 400;
+    line-height: 1.12;
+    animation: authFadeFromLeft 0.68s ease-out 0.48s both;
+  }
+
+  .employee-auth-panel {
+    min-height: 100vh;
+    padding: 42px 58px 42px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .employee-auth-card {
-    width: min(470px, 100%);
-    padding: 30px 42px 34px;
-    background: #2c5688;
-    border-radius: 24px;
+    width: min(514px, 100%);
+    padding: 34px 46px 34px;
+    background: #25275c;
+    border-radius: 18px;
     display: flex;
     flex-direction: column;
     align-items: center;
     color: white;
-    box-shadow: 0 18px 40px rgba(44, 86, 136, 0.22);
+    box-shadow: 0 22px 60px rgba(16, 17, 48, 0.36);
+    animation: authFadeFront 0.72s ease-out 0.22s both;
   }
 
   .employee-auth-icon {
     width: 104px;
     height: 104px;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
     position: relative;
     overflow: hidden;
     flex: 0 0 auto;
@@ -94,19 +164,19 @@
     height: 45px;
     transform: translateX(-50%);
     border-radius: 50%;
-    background: #2c5688;
-    box-shadow: 0 51px 0 20px #2c5688;
+    background: #25275c;
+    box-shadow: 0 51px 0 20px #25275c;
   }
 
   .employee-auth-heading {
-    margin: 0 0 22px;
+    margin: 0 0 24px;
     text-align: center;
   }
 
   .employee-auth-heading h2 {
     margin: 0;
     color: white;
-    font-size: 28px;
+    font-size: 31px;
     font-weight: 800;
     line-height: 1.15;
   }
@@ -114,7 +184,7 @@
   .employee-auth-heading p {
     margin: 7px 0 0;
     color: rgba(255, 255, 255, 0.86);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
   }
 
@@ -123,7 +193,7 @@
   }
 
   .employee-auth-field {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
 
   .employee-password-wrap {
@@ -132,12 +202,12 @@
 
   .employee-auth-field input {
     width: 100%;
-    height: 48px;
+    height: 50px;
     padding: 10px 14px;
     border: 2px solid #050505;
     border-radius: 8px;
     background: white;
-    color: #173b62;
+    color: #25275c;
     font-size: 16px;
     font-weight: 700;
     outline: none;
@@ -160,7 +230,7 @@
     border: 0;
     border-radius: 6px;
     background: #eef3f6;
-    color: #2c5688;
+    color: #25275c;
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
@@ -174,7 +244,7 @@
     display: block;
     margin: 0 0 7px;
     color: white;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
     line-height: 1.2;
     text-align: left;
@@ -183,13 +253,13 @@
 
   .employee-auth-card .btn {
     width: 100%;
-    min-height: 48px;
+    min-height: 58px;
     margin-top: 4px;
     background: white;
-    color: #2c5688;
+    color: #25275c;
     border: 0;
     border-radius: 8px;
-    font-size: 17px;
+    font-size: 20px;
     font-weight: 800;
     text-transform: none;
     box-shadow: none;
@@ -201,7 +271,7 @@
   }
 
   .employee-auth-link {
-    margin-top: 20px;
+    margin-top: 22px;
     color: white;
     font-size: 16px;
     font-weight: 700;
@@ -214,7 +284,87 @@
     text-decoration: underline;
   }
 
-  @media (max-width: 720px) {
+  @keyframes authFadeFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-36px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes authFadeFromRight {
+    from {
+      opacity: 0;
+      transform: translateX(36px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes authFadeFront {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .employee-auth-intro,
+    .employee-auth-brand,
+    .employee-auth-intro h1,
+    .employee-auth-subtitle,
+    .employee-auth-lead,
+    .employee-auth-copy,
+    .employee-auth-closing,
+    .employee-auth-card {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 980px) {
+    body {
+      background-attachment: scroll;
+    }
+
+    .employee-auth-container {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .employee-auth-intro {
+      min-height: auto;
+      padding: 18px 20px 24px;
+    }
+
+    .employee-auth-intro h1 {
+      text-align: center;
+      font-size: 42px;
+    }
+
+    .employee-auth-subtitle,
+    .employee-auth-copy,
+    .employee-auth-closing {
+      font-size: 20px;
+    }
+
+    .employee-auth-lead {
+      font-size: 19px;
+    }
+
+    .employee-auth-panel {
+      min-height: auto;
+      padding: 24px 18px 36px;
+    }
+
     .employee-auth-card {
       padding: 28px 24px 32px;
       border-radius: 20px;
@@ -230,57 +380,58 @@
       top: 19px;
       width: 40px;
       height: 40px;
-      box-shadow: 0 46px 0 18px #2c5688;
-    }
-
-    .header-logo-img {
-      height: 58px;
-    }
-
-    .header-content {
-      min-height: 72px;
-    }
-
-    .header-menu {
-      width: 58px;
+      box-shadow: 0 46px 0 18px #25275c;
     }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-  <div class="employee-auth-card">
-    <div class="employee-auth-icon" aria-hidden="true"></div>
-    <div class="employee-auth-heading">
-      <h2>Employee Register</h2>
-      <p>Create your employee access account</p>
+  <section class="employee-auth-intro" aria-label="Recruitment portal introduction">
+    <div class="employee-auth-brand">
+      <img src="{{ url_for('static', filename='img/company-logo.png') }}" alt="Caves Treasures Manpower and Construction Corporation">
     </div>
+    <h1>Your trusted Manpower Recruitment Agency</h1>
+    <p class="employee-auth-subtitle">With over 20 years of experience in the industry</p>
+    <p class="employee-auth-lead">Welcome to the Recruitment Management Portal of Caves Treasures Manpower &amp; Construction Corporation!</p>
+    <p class="employee-auth-copy">This platform is designed to support efficient applicant processing, job request management, and recruitment coordination. Please follow company compliance guidelines and maintain the confidentiality of applicant information at all times.</p>
+    <p class="employee-auth-closing">Together, let us continue delivering professional and reliable recruitment services.</p>
+  </section>
 
-    <form method="POST" id="employee-register-form" class="employee-auth-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="employee-auth-field">
-        <label for="username">username</label>
-        <input type="text" id="username" name="username" autocomplete="username" required>
+  <section class="employee-auth-panel" aria-label="Employee registration form">
+    <div class="employee-auth-card">
+      <div class="employee-auth-icon" aria-hidden="true"></div>
+      <div class="employee-auth-heading">
+        <h2>Employee Register</h2>
+        <p>Create your employee access account</p>
       </div>
 
-      <div class="employee-auth-field">
-        <label for="password">password</label>
-        <div class="employee-password-wrap">
-          <input type="password" id="password" name="password" minlength="6" autocomplete="new-password" required>
-          <button type="button" class="password-toggle" data-password-toggle="password">See</button>
+      <form method="POST" id="employee-register-form" class="employee-auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="employee-auth-field">
+          <label for="username">username</label>
+          <input type="text" id="username" name="username" autocomplete="username" required>
         </div>
-      </div>
 
-      <div class="employee-auth-field">
-        <label for="email">email</label>
-        <input type="email" id="email" name="email" autocomplete="email" pattern="^[^@\s]+@cavesmanpower\.com$" title="Use your @cavesmanpower.com email address" required>
-      </div>
+        <div class="employee-auth-field">
+          <label for="password">password</label>
+          <div class="employee-password-wrap">
+            <input type="password" id="password" name="password" minlength="6" autocomplete="new-password" required>
+            <button type="button" class="password-toggle" data-password-toggle="password">See</button>
+          </div>
+        </div>
 
-      <button type="submit" class="btn">register</button>
-    </form>
+        <div class="employee-auth-field">
+          <label for="email">email</label>
+          <input type="email" id="email" name="email" autocomplete="email" pattern="^[^@\s]+@cavesmanpower\.com$" title="Use your @cavesmanpower.com email address" required>
+        </div>
 
-    <a href="{{ url_for('employee_login') }}" class="employee-auth-link">already have an account? login</a>
-  </div>
+        <button type="submit" class="btn">register</button>
+      </form>
+
+      <a href="{{ url_for('employee_login') }}" class="employee-auth-link">already have an account? login</a>
+    </div>
+  </section>
 {% endblock %}
 
 {% block extra_js %}
