@@ -20,7 +20,7 @@
         <div class="header-menu">
           {% if current_user.is_authenticated %}
           <div class="announcement-wrap" id="announcementWrap">
-            <button type="button" class="announcement-bell" id="announcementBell" aria-label="Open announcements" aria-haspopup="true" aria-expanded="false">
+            <button type="button" class="announcement-bell" id="announcementBell" aria-label="Open notifications" aria-haspopup="true" aria-expanded="false">
               <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
                 <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
@@ -28,9 +28,9 @@
               <span class="announcement-count hidden" id="announcementCount">0</span>
             </button>
             <div class="announcement-menu hidden" id="announcementMenu">
-              <div class="announcement-menu-title">Announcements</div>
+              <div class="announcement-menu-title">Notifications</div>
               <div class="announcement-list" id="announcementList">
-                <div class="announcement-empty">No announcements.</div>
+                <div class="announcement-empty">No notifications.</div>
               </div>
             </div>
           </div>
@@ -80,7 +80,7 @@
     {% if current_user.is_authenticated %}
     <div class="announcement-modal-backdrop hidden" id="announcementModal" role="dialog" aria-modal="true" aria-labelledby="announcementModalTitle">
       <article class="announcement-modal-card">
-        <button type="button" class="announcement-modal-close" id="announcementModalClose" aria-label="Close announcement">x</button>
+        <button type="button" class="announcement-modal-close" id="announcementModalClose" aria-label="Close notification">x</button>
         <div class="announcement-modal-meta" id="announcementModalMeta"></div>
         <h2 id="announcementModalTitle"></h2>
         <p id="announcementModalMessage"></p>
@@ -93,7 +93,7 @@
     </footer>
   </div>
 
-<script src="{{ url_for('static', filename='js/script-fixed.js') }}?v=20260515-status-dropdown"></script>
+<script src="{{ url_for('static', filename='js/script-fixed.js') }}?v=20260521-notifications"></script>
   {% if current_user.is_authenticated %}
   <script>
     window.ATS_CSRF_TOKEN = '{{ csrf_token() }}';

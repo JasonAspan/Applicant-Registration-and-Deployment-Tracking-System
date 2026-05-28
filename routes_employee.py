@@ -10,8 +10,9 @@ from xml.sax.saxutils import escape as xml_escape
 import json
 import os
 
-from models import Applicant, ApplicantDashboardDeletion, ApplicantForward, Employee, Position, ProfileTodo, Role, db
+from models import Announcement, Applicant, ApplicantDashboardDeletion, ApplicantForward, Employee, Position, ProfileTodo, Role, db
 from auth_rbac import require_permission, has_permission, get_user_permissions
+from email_verification import send_email_verification
 from time_utils import ph_now
 
 APPLICANT_REMARK_STATUSES = ('Lined-up', 'Short-listed', 'Selected', 'Deployed')
@@ -21,6 +22,7 @@ PROFILE_ANALYTICS_ADMIN_ROLES = {'ADMIN', 'SUPER_ADMIN'}
 PROFILE_ANALYTICS_LAYOUT_ROLES = PROFILE_ANALYTICS_ROLES | PROFILE_ANALYTICS_ADMIN_ROLES
 PROFILE_TODO_ROLES = {'LEVEL_1_USER', 'LEVEL_2_USER', 'ADMIN'}
 PROFILE_STATUS_LABELS = ('Pending', 'Lined-up', 'Shortlisted', 'Selected', 'Deployed')
+ALLOWED_EMPLOYEE_EMAIL_DOMAIN = '@cavesmanpower.com'
 PDF_STATUS_COLORS = {
     'Pending': (100, 116, 139),
     'Lined-up': (37, 99, 235),
@@ -615,13 +617,21 @@ def register_employee_routes(app):
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
-            email = request.form.get('email') or (username + '@company.com')
+            email = (request.form.get('email') or '').strip()
 
-            if Employee.query.filter_by(username=username).first():
+            if not email:
+                flash('Email is required for account verification.', 'error')
+                return render_template('employee_register.html')
+
+            if not email.lower().endswith(ALLOWED_EMPLOYEE_EMAIL_DOMAIN):
+                flash('Only @cavesmanpower.com email addresses can register.', 'error')
+                return render_template('employee_register.html')
+
+            if Employee.query.filter_by(username=username, is_deleted=False).first():
                 flash('Username already exists.', 'error')
                 return render_template('employee_register.html')
 
-            if Employee.query.filter_by(email=email).first():
+            if Employee.query.filter_by(email=email, is_deleted=False).first():
                 flash('Email already exists.', 'error')
                 return render_template('employee_register.html')
 
@@ -630,7 +640,15 @@ def register_employee_routes(app):
             default_role = Role.query.filter_by(name='LEVEL_1_USER').first()
             role_id = default_role.id if default_role else None
 
-            employee = Employee(username=username, email=email, role_id=role_id, is_active=True)
+            employee = Employee(
+                username=username,
+                email=email,
+                role_id=role_id,
+                is_active=True,
+                email_verified=not current_app.config.get('EMAIL_VERIFICATION_REQUIRED', True),
+                email_verified_at=ph_now() if not current_app.config.get('EMAIL_VERIFICATION_REQUIRED', True) else None,
+                email_verification_sent_at=ph_now() if current_app.config.get('EMAIL_VERIFICATION_REQUIRED', True) else None
+            )
             employee.set_password(password)
             try:
                 db.session.add(employee)
@@ -640,9 +658,21 @@ def register_employee_routes(app):
                 flash('Registration failed (duplicate username/email).', 'error')
                 return render_template('employee_register.html')
 
-            login_user(employee)
-            flash('Registration successful!', 'success')
-            return redirect(url_for('dashboard'))
+            if current_app.config.get('EMAIL_VERIFICATION_REQUIRED', True):
+                try:
+                    send_email_verification(employee)
+                except Exception:
+                    current_app.logger.exception('Failed to send verification email')
+                    employee.email_verification_sent_at = None
+                    db.session.commit()
+                    flash('Account created, but the verification email service is unavailable. Please contact an administrator.', 'warning')
+                    return redirect(url_for('employee_login'))
+
+                flash('kindly check your email for verification', 'success')
+                return redirect(url_for('employee_login'))
+
+            flash('Account created successfully. You may now log in.', 'success')
+            return redirect(url_for('employee_login'))
 
         return render_template('employee_register.html')
 
@@ -1086,6 +1116,19 @@ def register_employee_routes(app):
                 ApplicantDashboardDeletion.employee_id == target_user.id,
                 ApplicantDashboardDeletion.applicant_id.in_(accessible_ids),
             ).delete(synchronize_session=False)
+
+        notification_count = len(accessible_ids)
+        notification_message = (
+            f'{current_user.username} forwarded you an Applicant.'
+            if notification_count == 1
+            else f'{current_user.username} forwarded you {notification_count} Applicants.'
+        )
+        db.session.add(Announcement(
+            title='Applicant Forwarded',
+            message=notification_message,
+            created_by_id=current_user.id,
+            recipient_employee_id=target_user.id,
+        ))
 
         db.session.commit()
         flash(f'Forwarded {forwarded_count} applicant(s) to {target_user.username}.', 'success')

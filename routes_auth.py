@@ -7,18 +7,100 @@ Routes:
 - Login with enforcement
 """
 
+import hashlib
+import secrets
+import time
+
 from flask import (
-    request, render_template, redirect, url_for, flash, 
-    jsonify, current_app, abort
+    request, render_template, redirect, url_for, flash,
+    jsonify, current_app, abort, session
 )
 from flask_login import login_user, logout_user, current_user, login_required
 from models import db, Employee, Role
+from email_verification import is_invalid_or_expired_token, send_mfa_code, verify_email_verification_token
 from rbac_middleware import enforce_first_login_password_reset, log_permission_action
 from time_utils import ph_now
 
 
+def _mfa_code_hash(code):
+    secret = current_app.config['SECRET_KEY']
+    return hashlib.sha256(f'{code}:{secret}'.encode('utf-8')).hexdigest()
+
+
+def _clear_pending_mfa():
+    for key in ('pending_mfa_user_id', 'pending_mfa_code_hash', 'pending_mfa_expires_at', 'pending_mfa_remember'):
+        session.pop(key, None)
+
+
+def _begin_mfa_challenge(user, remember):
+    code = f'{secrets.randbelow(1000000):06d}'
+    session['pending_mfa_user_id'] = user.id
+    session['pending_mfa_code_hash'] = _mfa_code_hash(code)
+    session['pending_mfa_expires_at'] = int(time.time()) + current_app.config.get('MFA_TOKEN_MAX_AGE', 600)
+    session['pending_mfa_remember'] = bool(remember)
+    send_mfa_code(user, code)
+
+
+def _complete_login(user, remember):
+    now = ph_now()
+    user.last_login = now
+    user.session_started_at = now
+    user.last_seen_at = now
+    user.force_logout_at = None
+    db.session.commit()
+
+    login_user(user, remember=remember)
+
+    log_permission_action(
+        'user_login',
+        user,
+        reason=f'User logged in from {request.remote_addr}'
+    )
+
+    if user.force_password_reset:
+        flash('You must reset your password on first login.', 'warning')
+        return redirect(url_for('reset_password_first_login'))
+
+    flash(f'Welcome back, {user.username}!', 'success')
+    return redirect(url_for('dashboard'))
+
+
+def _requires_mfa(user):
+    if not current_app.config.get('MFA_REQUIRED', True):
+        return False
+    return not (user.role_obj and user.role_obj.name == 'SUPER_ADMIN')
+
+
 def register_auth_routes(app):
     """Register authentication-related routes."""
+
+    @app.route('/verify-email/<token>')
+    def verify_email(token):
+        try:
+            payload = verify_email_verification_token(token)
+        except Exception as e:
+            if is_invalid_or_expired_token(e):
+                flash('Verification link is invalid or expired.', 'error')
+                return redirect(url_for('employee_login'))
+            raise
+
+        employee = Employee.query.filter_by(
+            id=payload.get('employee_id'),
+            email=payload.get('email'),
+            is_deleted=False
+        ).first()
+
+        if not employee:
+            flash('Verification link is invalid or expired.', 'error')
+            return redirect(url_for('employee_login'))
+
+        if not employee.email_verified:
+            employee.email_verified = True
+            employee.email_verified_at = ph_now()
+            db.session.commit()
+
+        flash('Email verified successfully. You may now log in.', 'success')
+        return redirect(url_for('employee_login'))
     
     @app.route('/reset-password-first-login', methods=['GET', 'POST'])
     @login_required
@@ -168,37 +250,30 @@ def register_auth_routes(app):
             if not user.check_password(password):
                 flash('Invalid username or password.', 'error')
                 return render_template('employee_login.html')
+
+            if current_app.config.get('EMAIL_VERIFICATION_REQUIRED', True) and not user.email_verified:
+                flash('Please verify your email before logging in.', 'error')
+                return render_template('employee_login.html')
             
             # Check if user has a role
             if not user.role_id:
                 flash('Your account is not assigned a role. Contact administrator.', 'error')
                 return render_template('employee_login.html')
+
+            if _requires_mfa(user):
+                try:
+                    _begin_mfa_challenge(user, request.form.get('remember_me'))
+                except Exception:
+                    current_app.logger.exception('Failed to send MFA email')
+                    _clear_pending_mfa()
+                    flash('Login verification email could not be sent. Please contact an administrator.', 'error')
+                    return render_template('employee_login.html')
+
+                flash('Enter the verification code sent to your email.', 'success')
+                return redirect(url_for('employee_mfa'))
             
             try:
-                # Update login/session timestamps
-                now = ph_now()
-                user.last_login = now
-                user.session_started_at = now
-                user.last_seen_at = now
-                user.force_logout_at = None
-                db.session.commit()
-                
-                # Log in user
-                login_user(user, remember=request.form.get('remember_me'))
-                
-                log_permission_action(
-                    'user_login',
-                    user,
-                    reason=f'User logged in from {request.remote_addr}'
-                )
-                
-                # Check if password reset is required
-                if user.force_password_reset:
-                    flash('You must reset your password on first login.', 'warning')
-                    return redirect(url_for('reset_password_first_login'))
-                
-                flash(f'Welcome back, {user.username}!', 'success')
-                return redirect(url_for('dashboard'))
+                return _complete_login(user, request.form.get('remember_me'))
             
             except Exception as e:
                 db.session.rollback()
@@ -206,6 +281,46 @@ def register_auth_routes(app):
                 return render_template('employee_login.html')
         
         return render_template('employee_login.html')
+
+    @app.route('/employee-mfa.html', methods=['GET', 'POST'])
+    def employee_mfa():
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
+
+        pending_user_id = session.get('pending_mfa_user_id')
+        expires_at = session.get('pending_mfa_expires_at')
+        if not pending_user_id or not expires_at:
+            flash('Please sign in again to request a verification code.', 'error')
+            return redirect(url_for('employee_login'))
+
+        user = Employee.query.filter_by(id=pending_user_id, is_deleted=False).first()
+        if not user or not user.is_active:
+            _clear_pending_mfa()
+            flash('Please sign in again to request a verification code.', 'error')
+            return redirect(url_for('employee_login'))
+
+        if int(time.time()) > int(expires_at):
+            _clear_pending_mfa()
+            flash('Verification code expired. Please sign in again.', 'error')
+            return redirect(url_for('employee_login'))
+
+        if request.method == 'POST':
+            code = ''.join(ch for ch in request.form.get('code', '') if ch.isdigit())
+            expected_hash = session.get('pending_mfa_code_hash')
+            if len(code) != 6 or not secrets.compare_digest(_mfa_code_hash(code), expected_hash or ''):
+                flash('Invalid verification code.', 'error')
+                return render_template('employee_mfa.html', email=user.email)
+
+            remember = session.get('pending_mfa_remember', False)
+            _clear_pending_mfa()
+            try:
+                return _complete_login(user, remember)
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Login error: {str(e)}', 'error')
+                return redirect(url_for('employee_login'))
+
+        return render_template('employee_mfa.html', email=user.email)
     
     
     @app.route('/employee-logout.html', methods=['GET', 'POST'])
@@ -220,6 +335,7 @@ def register_auth_routes(app):
         current_user.last_seen_at = None
         db.session.commit()
         logout_user()
+        _clear_pending_mfa()
         flash(f'You have been logged out. Goodbye!', 'success')
         return redirect(url_for('employee_login'))
 

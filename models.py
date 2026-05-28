@@ -87,6 +87,9 @@ class Employee(db.Model, UserMixin):
     session_started_at = db.Column(db.DateTime)
     last_seen_at = db.Column(db.DateTime)
     force_logout_at = db.Column(db.DateTime)
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    email_verified_at = db.Column(db.DateTime)
+    email_verification_sent_at = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
     deleted_at = db.Column(db.DateTime)
@@ -206,8 +209,10 @@ class Announcement(db.Model):
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=ph_now, nullable=False, index=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True, index=True)
+    recipient_employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True, index=True)
 
     created_by = db.relationship('Employee', foreign_keys=[created_by_id], backref=db.backref('announcements_created', lazy='dynamic'))
+    recipient_employee = db.relationship('Employee', foreign_keys=[recipient_employee_id], backref=db.backref('notifications_received', lazy='dynamic'))
 
     def __repr__(self):
         return f'<Announcement {self.title}>'

@@ -17,3 +17,15 @@ class Config:
     # Flask-Login
     LOGIN_MESSAGE = 'Employee login required for dashboard.'
 
+    # Email verification
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.office365.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in {'1', 'true', 'yes', 'on'}
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or MAIL_USERNAME
+    EMAIL_VERIFICATION_REQUIRED = os.environ.get('EMAIL_VERIFICATION_REQUIRED', 'true').lower() in {'1', 'true', 'yes', 'on'}
+    EMAIL_VERIFICATION_TOKEN_MAX_AGE = int(os.environ.get('EMAIL_VERIFICATION_TOKEN_MAX_AGE', '86400'))
+    MFA_REQUIRED = os.environ.get('MFA_REQUIRED', 'true').lower() in {'1', 'true', 'yes', 'on'}
+    MFA_TOKEN_MAX_AGE = int(os.environ.get('MFA_TOKEN_MAX_AGE', '600'))
+

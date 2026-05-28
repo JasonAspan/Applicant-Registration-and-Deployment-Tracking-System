@@ -1102,7 +1102,7 @@
   }
 
   async function loadAnnouncements() {
-    const data = await apiFetch(`${API_BASE}/announcements`);
+    const data = await apiFetch(`${API_BASE}/announcements?scope=global`);
     announcements = data.announcements || [];
     renderAnnouncements();
   }
@@ -1462,7 +1462,7 @@
 
   async function deleteUser(userId) {
     const user = users.find((item) => item.id === Number(userId));
-    if (!confirm(`Delete user "${user ? user.username : userId}"? SUPERADMIN can restore this account later.`)) return;
+    if (!confirm(`Delete user "${user ? user.username : userId}"? This forgets the account immediately and the user must register again.`)) return;
     await apiFetch(`${API_BASE}/users/${userId}/permanent`, { method: 'DELETE' });
     showMessage('User deleted.');
     await loadUsers();

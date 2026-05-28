@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     count.classList.toggle('hidden', unreadCount === 0);
 
     if (!announcements.length) {
-      list.innerHTML = '<div class="announcement-empty">No announcements.</div>';
+      list.innerHTML = '<div class="announcement-empty">No notifications.</div>';
       return;
     }
 

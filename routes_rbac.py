@@ -13,6 +13,7 @@ from io import BytesIO
 
 from flask import request, jsonify, render_template, redirect, url_for, flash, abort, send_file
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 
@@ -72,19 +73,24 @@ def register_rbac_routes(app):
             'message': announcement.message,
             'created_at': ph_iso(announcement.created_at),
             'created_by': announcement.created_by.username if announcement.created_by else 'System',
+            'recipient_id': announcement.recipient_employee_id,
             'is_read': announcement.id in read_ids,
         }
 
     def prune_old_announcements(limit=5):
-        old_announcements = Announcement.query.order_by(
+        global_announcements = Announcement.query.filter(
+            Announcement.recipient_employee_id.is_(None)
+        ).order_by(
             Announcement.created_at.desc(),
             Announcement.id.desc()
-        ).offset(limit).all()
+        ).all()
+        old_announcements = global_announcements[limit:]
         if not old_announcements:
             return
         old_ids = [announcement.id for announcement in old_announcements]
         AnnouncementRead.query.filter(AnnouncementRead.announcement_id.in_(old_ids)).delete(synchronize_session=False)
-        Announcement.query.filter(Announcement.id.in_(old_ids)).delete(synchronize_session=False)
+        for announcement in old_announcements:
+            db.session.delete(announcement)
     
     # ==================== User Management Routes ====================
     
@@ -111,6 +117,7 @@ def register_rbac_routes(app):
                 'email': emp.email,
                 'role': emp.role_obj.name if emp.role_obj else None,
                 'is_active': emp.is_active,
+                'email_verified': emp.email_verified,
                 'is_deleted': emp.is_deleted,
                 'force_password_reset': emp.force_password_reset,
                 'created_at': ph_iso(emp.created_at),
@@ -173,13 +180,13 @@ def register_rbac_routes(app):
             return jsonify({'error': 'Insufficient privileges to create this role'}), 403
         
         # Check if username already exists
-        if Employee.query.filter_by(username=data.get('username')).first():
+        if Employee.query.filter_by(username=data.get('username'), is_deleted=False).first():
             return jsonify({'error': 'Username already exists'}), 409
         
         # Create new user
         email = data.get('email') or f"{data.get('username')}@company.com"
         
-        if Employee.query.filter_by(email=email).first():
+        if Employee.query.filter_by(email=email, is_deleted=False).first():
             return jsonify({'error': 'Email already exists'}), 409
         
         try:
@@ -189,6 +196,8 @@ def register_rbac_routes(app):
                 role_id=role.id,
                 force_password_reset=True,
                 is_active=True,
+                email_verified=True,
+                email_verified_at=ph_now(),
                 created_by_id=current_user.id
             )
             user.set_password(data.get('password'))
@@ -408,7 +417,7 @@ def register_rbac_routes(app):
     @login_required
     @require_permission_check('manage_users')
     def api_permanently_delete_user(user_id):
-        """Soft delete a user account while preserving related records."""
+        """Forget a user account identity while preserving internal audit links."""
         user = Employee.query.filter_by(id=user_id, is_deleted=False).first_or_404()
 
         if current_user.id == user_id:
@@ -419,17 +428,23 @@ def register_rbac_routes(app):
 
         try:
             username = user.username
+            deleted_at = ph_now()
             user.is_active = False
             user.is_deleted = True
-            user.deleted_at = ph_now()
+            user.username = f'deleted_user_{user.id}_{int(deleted_at.timestamp())}'
+            user.email = f'deleted_user_{user.id}_{int(deleted_at.timestamp())}@deleted.local'
+            user.email_verified = False
+            user.email_verified_at = None
+            user.email_verification_sent_at = None
+            user.deleted_at = deleted_at
             user.deleted_by_id = current_user.id
             user.session_started_at = None
             user.last_seen_at = None
-            user.force_logout_at = ph_now()
+            user.force_logout_at = deleted_at
             db.session.commit()
 
-            log_permission_action('user_deleted', current_user, reason=f"Soft deleted user {username}")
-            return jsonify({'message': 'User deleted successfully'})
+            log_permission_action('user_deleted', current_user, reason=f"Deleted and forgot user {username}")
+            return jsonify({'message': 'User deleted and forgotten successfully'})
         except Exception as e:
             db.session.rollback()
             return jsonify({'error': f'Failed to delete user: {str(e)}'}), 500
@@ -439,22 +454,8 @@ def register_rbac_routes(app):
     @login_required
     @require_permission_check('manage_users')
     def api_restore_user(user_id):
-        """Restore a soft-deleted user account."""
-        if not is_super_admin():
-            return jsonify({'error': 'Only SUPER_ADMIN can restore users'}), 403
-
-        user = Employee.query.filter_by(id=user_id, is_deleted=True).first_or_404()
-        try:
-            user.is_deleted = False
-            user.is_active = True
-            user.deleted_at = None
-            user.deleted_by_id = None
-            db.session.commit()
-            log_permission_action('user_restored', user, reason=f"Restored by {current_user.username}")
-            return jsonify({'message': 'User restored successfully'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': f'Failed to restore user: {str(e)}'}), 500
+        """Deleted users are forgotten and must register again."""
+        return jsonify({'error': 'Deleted users cannot be restored. The user must register again.'}), 410
 
 
     @app.route('/api/users/<int:user_id>/remote-logout', methods=['POST'])
@@ -669,8 +670,18 @@ def register_rbac_routes(app):
     @app.route('/api/announcements', methods=['GET'])
     @login_required
     def api_get_announcements():
-        """Get the latest announcements and current user's read state."""
-        announcements = Announcement.query.order_by(
+        """Get the latest global announcements and current user's private notifications."""
+        if request.args.get('scope') == 'global' and is_super_admin():
+            query = Announcement.query.filter(Announcement.recipient_employee_id.is_(None))
+        else:
+            query = Announcement.query.filter(
+                or_(
+                    Announcement.recipient_employee_id.is_(None),
+                    Announcement.recipient_employee_id == current_user.id,
+                )
+            )
+
+        announcements = query.order_by(
             Announcement.created_at.desc(),
             Announcement.id.desc()
         ).limit(5).all()
@@ -717,6 +728,7 @@ def register_rbac_routes(app):
                 title=title,
                 message=message,
                 created_by_id=current_user.id,
+                recipient_employee_id=None,
             )
             db.session.add(announcement)
             db.session.flush()
@@ -740,6 +752,8 @@ def register_rbac_routes(app):
             return jsonify({'error': 'Only SUPER_ADMIN can delete announcements'}), 403
 
         announcement = Announcement.query.get_or_404(announcement_id)
+        if announcement.recipient_employee_id is not None:
+            return jsonify({'error': 'Private notifications cannot be deleted here'}), 403
         try:
             AnnouncementRead.query.filter_by(announcement_id=announcement.id).delete(synchronize_session=False)
             db.session.delete(announcement)

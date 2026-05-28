@@ -69,6 +69,15 @@ def ensure_db_schema():
             if 'force_logout_at' not in employee_cols:
                 db.session.execute(text('ALTER TABLE employee ADD COLUMN force_logout_at DATETIME'))
                 db.session.commit()
+            if 'email_verified' not in employee_cols:
+                db.session.execute(text('ALTER TABLE employee ADD COLUMN email_verified BOOLEAN DEFAULT TRUE NOT NULL'))
+                db.session.commit()
+            if 'email_verified_at' not in employee_cols:
+                db.session.execute(text('ALTER TABLE employee ADD COLUMN email_verified_at DATETIME'))
+                db.session.commit()
+            if 'email_verification_sent_at' not in employee_cols:
+                db.session.execute(text('ALTER TABLE employee ADD COLUMN email_verification_sent_at DATETIME'))
+                db.session.commit()
             if 'is_active' not in employee_cols:
                 db.session.execute(text('ALTER TABLE employee ADD COLUMN is_active BOOLEAN DEFAULT 1'))
                 db.session.commit()
@@ -87,6 +96,12 @@ def ensure_db_schema():
 
         if 'applicant' not in tables:
             return
+
+        if 'announcement' in tables:
+            announcement_cols = {c['name'] for c in inspector.get_columns('announcement')}
+            if 'recipient_employee_id' not in announcement_cols:
+                db.session.execute(text('ALTER TABLE announcement ADD COLUMN recipient_employee_id INTEGER'))
+                db.session.commit()
 
         cols = {c['name'] for c in inspector.get_columns('applicant')}
         if 'gender' not in cols:

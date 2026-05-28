@@ -33,6 +33,7 @@ def create_user(username, role_name):
         email=f'{username}@example.test',
         role_id=role.id,
         is_active=True,
+        email_verified=True,
         session_started_at=ph_now(),
         last_seen_at=ph_now(),
     )
@@ -63,6 +64,91 @@ def set_permission_override(user, permission_key, is_allowed):
             reason='Test override',
         ))
     db.session.commit()
+
+
+def test_employee_registration_sends_verification_email(app, client, monkeypatch):
+    sent_to = []
+
+    def fake_send_email_verification(employee):
+        sent_to.append(employee.email)
+
+    monkeypatch.setattr('routes_employee.send_email_verification', fake_send_email_verification)
+
+    response = client.post('/employee-register.html', data={
+        'username': 'new_employee',
+        'password': 'Password123',
+        'email': 'new_employee@cavesmanpower.com',
+    })
+
+    assert response.status_code == 302
+    assert sent_to == ['new_employee@cavesmanpower.com']
+
+    with app.app_context():
+        from models import Employee
+
+        user = Employee.query.filter_by(username='new_employee').one()
+        assert user.email_verified is False
+        assert user.email_verification_sent_at is not None
+
+
+def test_login_requires_email_mfa_code(app, client, monkeypatch):
+    sent_codes = []
+
+    def fake_send_mfa_code(employee, code):
+        sent_codes.append((employee.email, code))
+
+    monkeypatch.setattr('routes_auth.send_mfa_code', fake_send_mfa_code)
+
+    with app.app_context():
+        user = create_user('mfa_user', 'LEVEL_1_USER')
+        user_id = user.id
+
+    login_response = client.post('/employee-login.html', data={
+        'username': 'mfa_user',
+        'password': 'Password123',
+    })
+
+    assert login_response.status_code == 302
+    assert login_response.headers['Location'].endswith('/employee-mfa.html')
+    assert len(sent_codes) == 1
+
+    with client.session_transaction() as session:
+        assert '_user_id' not in session
+        assert session['pending_mfa_user_id'] == user_id
+
+    bad_response = client.post('/employee-mfa.html', data={'code': '000000'})
+    assert bad_response.status_code == 200
+
+    good_response = client.post('/employee-mfa.html', data={'code': sent_codes[0][1]})
+    assert good_response.status_code == 302
+    assert good_response.headers['Location'].endswith('/dashboard.html')
+
+    with client.session_transaction() as session:
+        assert session['_user_id'] == str(user_id)
+        assert 'pending_mfa_user_id' not in session
+
+
+def test_superadmin_login_skips_mfa(app, client, monkeypatch):
+    def fail_send_mfa_code(employee, code):
+        raise AssertionError('SUPER_ADMIN should not receive MFA challenge')
+
+    monkeypatch.setattr('routes_auth.send_mfa_code', fail_send_mfa_code)
+
+    with app.app_context():
+        admin = create_user('mfa_superadmin', 'SUPER_ADMIN')
+        admin_id = admin.id
+
+    response = client.post('/employee-login.html', data={
+        'username': 'mfa_superadmin',
+        'password': 'Password123',
+    })
+
+    assert response.status_code == 302
+    assert response.headers['Location'].endswith('/dashboard.html')
+
+    with client.session_transaction() as session:
+        assert session['_user_id'] == str(admin_id)
+        assert 'pending_mfa_user_id' not in session
 
 
 def test_api_404_errors_are_json(app, client):
@@ -236,12 +322,13 @@ def test_user_permission_overrides_block_applicant_actions(app, client):
     assert excel_response.status_code == 302
 
 
-def test_user_soft_delete_and_restore(app, client):
-    from models import Employee
+def test_user_delete_forgets_identity_and_requires_registration(app, client):
+    from models import Employee, db
 
     with app.app_context():
         admin = create_user('superadmin_test', 'SUPER_ADMIN')
         target = create_user('target_user', 'LEVEL_1_USER')
+        target_email = target.email
         login(client, admin)
         target_id = target.id
 
@@ -252,18 +339,28 @@ def test_user_soft_delete_and_restore(app, client):
         deleted_user = Employee.query.get(target_id)
         assert deleted_user.is_deleted is True
         assert deleted_user.is_active is False
+        assert deleted_user.username != 'target_user'
+        assert deleted_user.email != target_email
 
     list_response = client.get('/api/users?per_page=100')
     assert list_response.status_code == 200
     assert target_id not in [user['id'] for user in list_response.get_json()['users']]
 
     restore_response = client.post(f'/api/users/{target_id}/restore')
-    assert restore_response.status_code == 200
+    assert restore_response.status_code == 410
 
     with app.app_context():
-        restored_user = Employee.query.get(target_id)
-        assert restored_user.is_deleted is False
-        assert restored_user.is_active is True
+        duplicate = Employee(
+            username='target_user',
+            email=target_email,
+            role_id=deleted_user.role_id,
+            is_active=True,
+            email_verified=False,
+        )
+        duplicate.set_password('Password123')
+        db.session.add(duplicate)
+        db.session.commit()
+        assert duplicate.id != target_id
 
 
 def test_superadmin_applicant_delete_is_restorable(app, client):
@@ -382,7 +479,7 @@ def test_applicant_status_requires_remark_owner_and_resets_on_undo(app, client):
 
 
 def test_remarked_applicant_cannot_be_forwarded_until_remark_removed(app, client):
-    from models import Applicant, ApplicantForward, db
+    from models import Announcement, Applicant, ApplicantForward, Employee, db
     from time_utils import ph_now
 
     with app.app_context():
@@ -403,6 +500,7 @@ def test_remarked_applicant_cannot_be_forwarded_until_remark_removed(app, client
         db.session.add(applicant)
         db.session.commit()
         applicant_id = applicant.id
+        admin_id = admin.id
         target_id = target.id
         login(client, admin)
 
@@ -429,6 +527,35 @@ def test_remarked_applicant_cannot_be_forwarded_until_remark_removed(app, client
 
     with app.app_context():
         assert ApplicantForward.query.filter_by(applicant_id=applicant_id, to_employee_id=target_id).count() == 1
+        notification = Announcement.query.filter_by(recipient_employee_id=target_id).one()
+        assert notification.title == 'Applicant Forwarded'
+        assert notification.message == 'forward_admin forwarded you an Applicant.'
+
+        login(client, db.session.get(Employee, target_id))
+
+    notifications_response = client.get('/api/announcements')
+    assert notifications_response.status_code == 200
+    notifications_payload = notifications_response.get_json()
+    forward_notifications = [
+        item for item in notifications_payload['announcements']
+        if item['title'] == 'Applicant Forwarded'
+    ]
+    assert forward_notifications
+    assert forward_notifications[0]['message'] == 'forward_admin forwarded you an Applicant.'
+    assert forward_notifications[0]['recipient_id'] == target_id
+
+    with app.app_context():
+        login(client, db.session.get(Employee, admin_id))
+
+    duplicate_forward = client.post(
+        '/applicants/forward',
+        data={'applicant_ids': str(applicant_id), 'target_user_id': str(target_id)},
+    )
+    assert duplicate_forward.status_code == 302
+
+    with app.app_context():
+        assert ApplicantForward.query.filter_by(applicant_id=applicant_id, to_employee_id=target_id).count() == 1
+        assert Announcement.query.filter_by(recipient_employee_id=target_id).count() == 2
 
 
 def test_admin_can_undo_other_users_remark_but_peer_cannot(app, client):
@@ -851,7 +978,7 @@ def test_announcements_keep_latest_five_and_track_user_reads(app, client):
     with app.app_context():
         from models import Announcement, Employee, db
 
-        assert Announcement.query.count() == 5
+        assert Announcement.query.filter(Announcement.recipient_employee_id.is_(None)).count() == 5
         login(client, db.session.get(Employee, reader_id))
 
     reader_list = client.get('/api/announcements')
