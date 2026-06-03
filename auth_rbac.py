@@ -10,7 +10,7 @@ This module provides:
 from functools import wraps
 from flask import abort, current_app, jsonify
 from flask_login import current_user
-from sqlalchemy import delete
+from sqlalchemy import delete, text
 from models import db, Employee, Role, Permission, UserPermission, role_permission
 
 # Define default permission keys
@@ -227,6 +227,9 @@ def seed_roles_and_permissions():
     Seed default roles and permissions into database.
     Should be called during app initialization.
     """
+    if db.engine.dialect.name == 'postgresql':
+        db.session.execute(text("SELECT pg_advisory_xact_lock(2026052901)"))
+
     # Create or update permissions
     for perm_key, perm_desc in PERMISSION_KEYS.items():
         existing = Permission.query.filter_by(key=perm_key).first()
@@ -234,7 +237,11 @@ def seed_roles_and_permissions():
             perm = Permission(key=perm_key, description=perm_desc)
             db.session.add(perm)
     
-    db.session.commit()
+    db.session.flush()
+    permissions_by_key = {
+        permission.key: permission
+        for permission in Permission.query.filter(Permission.key.in_(PERMISSION_KEYS.keys())).all()
+    }
     
     # Create or update roles
     for role_name, perm_keys in ROLE_PERMISSIONS.items():
@@ -251,9 +258,14 @@ def seed_roles_and_permissions():
         
         # Add new permissions
         for perm_key in perm_keys:
-            perm = Permission.query.filter_by(key=perm_key).first()
+            perm = permissions_by_key.get(perm_key)
             if perm:
-                role.permissions.append(perm)
+                db.session.execute(
+                    role_permission.insert().values(
+                        role_id=role.id,
+                        permission_id=perm.id,
+                    )
+                )
     
     db.session.commit()
 

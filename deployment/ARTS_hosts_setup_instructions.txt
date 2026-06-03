@@ -1,0 +1,76 @@
+ARTS Local Access Setup
+=======================
+
+Use this only for devices connected to the same local network as the ARTS server.
+
+Server address:
+172.16.9.62
+
+Friendly browser name:
+http://arts.ctmcc
+
+
+WINDOWS OPTION A - Automatic Script
+-----------------------------------
+1. Save/copy this folder to the Windows computer.
+2. Right-click Windows PowerShell.
+3. Click "Run as administrator".
+4. Go to the folder that contains this file.
+5. Run:
+
+   powershell -ExecutionPolicy Bypass -File .\install_arts_ctmcc_hosts_windows.ps1
+
+6. Open:
+
+   http://arts.ctmcc
+
+
+WINDOWS OPTION B - Manual Hosts File Edit
+-----------------------------------------
+1. Open Notepad as Administrator.
+2. In Notepad, open:
+
+   C:\Windows\System32\drivers\etc\hosts
+
+3. Add this line at the bottom:
+
+   172.16.9.62 arts.ctmcc
+
+4. Save the file.
+5. Open Command Prompt or PowerShell and run:
+
+   ipconfig /flushdns
+
+6. Open:
+
+   http://arts.ctmcc
+
+
+MACOS / LINUX
+-------------
+1. Open Terminal.
+2. Run:
+
+   sudo nano /etc/hosts
+
+3. Add this line:
+
+   172.16.9.62 arts.ctmcc
+
+4. Save.
+5. Open:
+
+   http://arts.ctmcc
+
+
+PHONES / TABLETS
+----------------
+Most phones do not allow easy hosts-file editing.
+
+Use this instead:
+
+   http://172.16.9.62
+
+For all devices to use http://arts.ctmcc without manual setup, configure local DNS on the router or DNS server:
+
+   arts.ctmcc -> 172.16.9.62

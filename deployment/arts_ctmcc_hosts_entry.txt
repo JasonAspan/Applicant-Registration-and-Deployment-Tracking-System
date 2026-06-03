@@ -1,0 +1,6 @@
+# ARTS local network hosts entry
+#
+# Add this line to the device hosts file to access the system as:
+# http://arts.ctmcc
+
+172.16.9.62 arts.ctmcc
