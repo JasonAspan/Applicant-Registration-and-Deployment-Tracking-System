@@ -69,7 +69,7 @@ body {
 
 .header-title h1 {
   font-size: 28px;
-  color: #2c5282;
+  color: #1D4735;
   margin: 0;
   font-weight: 600;
 }
@@ -118,7 +118,7 @@ body {
 }
 
 .dashboard-header-bar {
-  background: #2c5282;
+  background: #1D4735;
   color: white;
   padding: 16px 20px;
   display: flex;
@@ -215,7 +215,7 @@ body {
 
 .quick-search-clear:hover {
   background: #edf2f7;
-  color: #1a202c;
+  color: #040F0B;
 }
 
 .search-btn {
@@ -277,7 +277,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 5px;
   background: white;
-  color: #1f3650;
+  color: #0C231C;
   font-size: 13px;
 }
 
@@ -332,7 +332,7 @@ body {
 }
 
 .refresh-btn {
-  color: #2196F3;
+  color: #2F6F58;
 }
 
 .delete-btn {
@@ -438,7 +438,7 @@ body {
   min-width: 132px;
   height: 32px;
   padding: 5px 26px 5px 9px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid #A8CFBE;
   border-radius: 5px;
   background-color: #ffffff;
   color: #2d3748;
@@ -466,10 +466,10 @@ body {
 .remark-btn {
   margin-left: 8px;
   padding: 4px 8px;
-  border: 1px solid #cbd5e0;
+  border: 1px solid #A8CFBE;
   border-radius: 5px;
   background: #f7fafc;
-  color: #2c5282;
+  color: #1D4735;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -497,7 +497,7 @@ body {
   margin: 0 4px;
   background: none;
   border: none;
-  color: #667eea;
+  color: #2F6F58;
   cursor: pointer;
   font-size: 16px;
   text-decoration: none;
@@ -505,7 +505,7 @@ body {
 }
 
 .action-link:hover {
-  color: #5a67d8;
+  color: #255943;
 }
 
 .delete-link {
@@ -573,7 +573,7 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2F6F58;
 }
 
 textarea {
@@ -601,8 +601,8 @@ textarea {
 .btn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #E0A72E 0%, #C48F1F 100%);
+  color: #123027;
   border: none;
   border-radius: 8px;
   font-size: 18px;
@@ -668,12 +668,12 @@ textarea {
 
 .search-bar-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2F6F58;
 }
 
 .search-bar-btn {
   padding: 10px 16px;
-  background: #667eea;
+  background: #2F6F58;
   color: white;
   border: none;
   border-radius: 8px;
@@ -683,7 +683,7 @@ textarea {
 }
 
 .search-bar-btn:hover {
-  background: #5a67d8;
+  background: #255943;
 }
 
 .filter-toggle-btn {
@@ -698,7 +698,7 @@ textarea {
 }
 
 .filter-toggle-btn:hover {
-  background: #8a9aac;
+  background: #57A883;
 }
 
 .dashboard-user-section {
@@ -778,8 +778,8 @@ textarea {
 }
 
 .user-menu a:hover {
-  background: #ebf4ff;
-  color: #667eea;
+  background: #DCEBE3;
+  color: #2F6F58;
 }
 
 .announcement-wrap {
@@ -793,7 +793,7 @@ textarea {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #fff;
-  color: #2c5282;
+  color: #1D4735;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -803,7 +803,7 @@ textarea {
 
 .announcement-bell:hover {
   background: #f7fafc;
-  border-color: #cbd5e0;
+  border-color: #A8CFBE;
 }
 
 .announcement-bell svg {
@@ -833,10 +833,10 @@ textarea {
   right: 0;
   width: min(360px, calc(100vw - 32px));
   margin-top: 10px;
-  border: 1px solid #d6e0ea;
+  border: 1px solid #C3DED1;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 12px 28px rgba(15, 35, 60, 0.16);
+  box-shadow: 0 12px 28px rgba(7, 23, 18, 0.16);
   overflow: hidden;
   z-index: 3002;
 }
@@ -844,7 +844,7 @@ textarea {
 .announcement-menu-title {
   padding: 12px 14px;
   border-bottom: 1px solid #e2e8f0;
-  color: #173b62;
+  color: #123027;
   font-size: 14px;
   font-weight: 800;
 }
@@ -860,7 +860,7 @@ textarea {
   border: 0;
   border-bottom: 1px solid #edf2f7;
   background: #fff;
-  color: #1f3650;
+  color: #0C231C;
   text-align: left;
   cursor: pointer;
 }
@@ -874,14 +874,14 @@ textarea {
 }
 
 .announcement-item.unread {
-  background: #eaf4ff;
-  border-left: 4px solid #2c5282;
+  background: #DCEBE3;
+  border-left: 4px solid #1D4735;
 }
 
 .announcement-item-title {
   display: block;
   margin-bottom: 4px;
-  color: #173b62;
+  color: #123027;
   font-size: 14px;
   font-weight: 800;
 }
@@ -906,7 +906,7 @@ textarea {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(12, 26, 44, 0.44);
+  background: rgba(4, 15, 11, 0.44);
 }
 
 .announcement-modal-card {
@@ -916,7 +916,7 @@ textarea {
   overflow-y: auto;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 24px 60px rgba(10, 25, 45, 0.26);
+  box-shadow: 0 24px 60px rgba(4, 15, 11, 0.26);
   padding: 28px;
 }
 
@@ -926,10 +926,10 @@ textarea {
   right: 12px;
   width: 32px;
   height: 32px;
-  border: 1px solid #d6e0ea;
+  border: 1px solid #C3DED1;
   border-radius: 6px;
   background: #f7fafc;
-  color: #173b62;
+  color: #123027;
   cursor: pointer;
   font-size: 18px;
   font-weight: 800;
@@ -949,7 +949,7 @@ textarea {
 
 .announcement-modal-card h2 {
   margin: 0 36px 14px 0;
-  color: #173b62;
+  color: #123027;
   font-size: 24px;
   line-height: 1.2;
 }
@@ -1031,7 +1031,7 @@ textarea {
 }
 
 .icon-btn:hover {
-  background: #ebf4ff;
+  background: #DCEBE3;
 }
 
 .batch-bar {
@@ -1096,7 +1096,7 @@ textarea {
   height: 36px;
   border: 1px solid #e2e8f0;
   background: white;
-  color: #2c5282;
+  color: #1D4735;
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
@@ -1105,15 +1105,15 @@ textarea {
 }
 
 .page-btn:hover {
-  background: #2c5282;
+  background: #1D4735;
   color: white;
-  border-color: #2c5282;
+  border-color: #1D4735;
 }
 
 .page-btn.active {
-  background: #2c5282;
+  background: #1D4735;
   color: white;
-  border-color: #2c5282;
+  border-color: #1D4735;
   cursor: default;
 }
 
@@ -1206,7 +1206,7 @@ textarea {
 }
 
 .profile-eyebrow {
-  color: #2c5282;
+  color: #1D4735;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -1241,9 +1241,9 @@ textarea {
   justify-content: center;
   min-height: 40px;
   padding: 10px 14px;
-  border: 1px solid #2c5282;
+  border: 1px solid #1D4735;
   border-radius: 6px;
-  background: #2c5282;
+  background: #1D4735;
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
@@ -1254,7 +1254,7 @@ textarea {
 
 .profile-action.secondary {
   background: #ffffff;
-  color: #2c5282;
+  color: #1D4735;
 }
 
 .profile-action.full {
@@ -1299,7 +1299,7 @@ textarea {
 }
 
 .profile-panel-heading strong {
-  color: #2c5282;
+  color: #1D4735;
   font-size: 18px;
 }
 
@@ -1313,7 +1313,7 @@ textarea {
 .profile-progress span {
   display: block;
   height: 100%;
-  background: #2c5282;
+  background: #1D4735;
   border-radius: inherit;
 }
 
@@ -1338,7 +1338,7 @@ textarea {
   content: "";
   width: 12px;
   height: 12px;
-  border: 2px solid #cbd5e0;
+  border: 2px solid #A8CFBE;
   border-radius: 50%;
   flex: 0 0 auto;
 }
@@ -1410,9 +1410,9 @@ textarea {
 .role-badge {
   flex: 0 0 auto;
   padding: 7px 10px;
-  background: #ebf4ff;
-  color: #2c5282;
-  border: 1px solid #bee3f8;
+  background: #DCEBE3;
+  color: #1D4735;
+  border: 1px solid #A8CFBE;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 800;
@@ -1688,12 +1688,12 @@ textarea {
 
 .status-1,
 .status-bg-1 {
-  background: #334155;
+  background: #0C231C;
 }
 
 .status-2,
 .status-bg-2 {
-  background: #1d4ed8;
+  background: #7FBC9F;
 }
 
 .status-3,
@@ -1748,14 +1748,14 @@ textarea {
   justify-content: center;
   gap: 7px;
   padding: 0 6px 8px;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid #A8CFBE;
 }
 
 .bar-segment {
   position: relative;
   width: 30px;
   min-height: 0;
-  border: 1px solid rgba(15, 23, 42, 0.28);
+  border: 1px solid rgba(7, 23, 18, 0.28);
   border-radius: 5px 5px 0 0;
   color: #ffffff;
   font-size: 12px;
@@ -1782,7 +1782,7 @@ textarea {
   top: -22px;
   left: 50%;
   transform: translateX(-50%);
-  color: #0f172a;
+  color: #071712;
   font-size: 12px;
   font-weight: 900;
   line-height: 1;
@@ -1807,7 +1807,7 @@ textarea {
   gap: 6px;
   align-items: center;
   padding-bottom: 10px;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid #A8CFBE;
 }
 
 .todo-add-form button {
@@ -1828,7 +1828,7 @@ textarea {
   min-width: 0;
   border: 0;
   padding: 7px 0;
-  color: #0f172a;
+  color: #071712;
   font-size: 14px;
   font-weight: 600;
 }
@@ -1839,7 +1839,7 @@ textarea {
 }
 
 .todo-add-form input::placeholder {
-  color: #94a3b8;
+  color: #7FBC9F;
   font-weight: 500;
 }
 
@@ -1862,7 +1862,7 @@ textarea {
 .todo-checkbox {
   width: 14px;
   height: 14px;
-  border: 1px solid #94a3b8;
+  border: 1px solid #7FBC9F;
   border-radius: 4px;
   background: #ffffff;
   color: #0f766e;
@@ -1881,7 +1881,7 @@ textarea {
 }
 
 .todo-display span {
-  color: #00305a;
+  color: #071712;
   font-size: 14px;
   font-weight: 800;
   line-height: 1.35;
@@ -1889,7 +1889,7 @@ textarea {
 }
 
 .todo-item.done .todo-display span {
-  color: #64748b;
+  color: #0C231C;
   text-decoration: line-through;
 }
 
@@ -1909,7 +1909,7 @@ textarea {
 .todo-edit-form button {
   border: 0;
   background: transparent;
-  color: #2563eb;
+  color: #57A883;
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
@@ -2097,7 +2097,7 @@ textarea {
   margin: 0;
   padding: 16px 22px;
   text-align: center;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 18px 45px rgba(7, 23, 18, 0.22);
   transform: translate(-50%, -50%);
   animation: client-alert-fade 2s ease forwards;
   pointer-events: none;
@@ -2127,7 +2127,7 @@ textarea {
 }
 
 .nav-links a {
-  color: #667eea;
+  color: #2F6F58;
   text-decoration: none;
   margin: 0 15px;
   padding: 8px 12px;
@@ -2136,7 +2136,7 @@ textarea {
 }
 
 .nav-links a:hover {
-  background: #ebf4ff;
+  background: #DCEBE3;
 }
 
 .filter-wrap {

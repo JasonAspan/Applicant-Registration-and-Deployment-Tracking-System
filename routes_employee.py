@@ -22,7 +22,6 @@ PROFILE_ANALYTICS_ADMIN_ROLES = {'ADMIN', 'SUPER_ADMIN'}
 PROFILE_ANALYTICS_LAYOUT_ROLES = PROFILE_ANALYTICS_ROLES | PROFILE_ANALYTICS_ADMIN_ROLES
 PROFILE_TODO_ROLES = {'LEVEL_1_USER', 'LEVEL_2_USER', 'ADMIN'}
 PROFILE_STATUS_LABELS = ('Pending', 'Lined-up', 'Shortlisted', 'Selected', 'Deployed')
-ALLOWED_EMPLOYEE_EMAIL_DOMAIN = '@cavesmanpower.com'
 PDF_STATUS_COLORS = {
     'Pending': (100, 116, 139),
     'Lined-up': (37, 99, 235),
@@ -623,8 +622,9 @@ def register_employee_routes(app):
                 flash('Email is required for account verification.', 'error')
                 return render_template('employee_register.html')
 
-            if not email.lower().endswith(ALLOWED_EMPLOYEE_EMAIL_DOMAIN):
-                flash('Only @cavesmanpower.com email addresses can register.', 'error')
+            allowed_domain = current_app.config.get('ALLOWED_EMPLOYEE_EMAIL_DOMAIN')
+            if allowed_domain and not email.lower().endswith(allowed_domain):
+                flash(f'Only {allowed_domain} email addresses can register.', 'error')
                 return render_template('employee_register.html')
 
             if Employee.query.filter_by(username=username, is_deleted=False).first():

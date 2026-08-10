@@ -11,11 +11,8 @@
   <div class="app-wrapper">
     <header class="app-header">
       <div class="header-content">
-        <div class="header-logo">
-          <img src="{{ url_for('static', filename='img/company-logo.png') }}" class="header-logo-img" alt="Company logo">
-        </div>
         <div class="header-title">
-          <h1>Applicant Tracking System</h1>
+          <h1>Applicant Registration and Deployment Tracking System</h1>
         </div>
         <div class="header-menu">
           {% if current_user.is_authenticated %}
@@ -89,7 +86,7 @@
     {% endif %}
 
     <footer class="app-footer">
-      <span class="footer-copyright">&copy; Caves Treasures Manpower &amp; Construction Corp. A.R.T.S app ver. 1.0.1</span>
+      <span class="footer-copyright">&copy; Applicant Registration and Deployment Tracking System v1.0.1</span>
     </footer>
   </div>
 

@@ -194,7 +194,7 @@
                   {% for status in analytics.status_options %}
                     {% set count = item.counts[status] %}
                     {% set max_count = analytics.max_position_count or 1 %}
-                    {% set bar_colors = ['#334155', '#1d4ed8', '#6d28d9', '#15803d', '#b91c1c'] %}
+                    {% set bar_colors = ['#0C231C', '#7FBC9F', '#6d28d9', '#15803d', '#b91c1c'] %}
                     {% set bar_height = (52 + (count / max_count * 168)) if count else 0 %}
                     <div class="bar-segment status-bg-{{ loop.index }} {{ 'has-value' if count else '' }}" style="height: {{ bar_height|round(0, 'floor') }}px; background: {{ bar_colors[loop.index0] }};" title="{{ status }}: {{ count }}">
                       {% if count %}<span>{{ count }}</span>{% endif %}
@@ -424,7 +424,7 @@
         if (!canvas) return;
         const rows = {{ analytics.movement_chart|tojson }};
         const statuses = {{ analytics.status_options|list|tojson }};
-        const colors = ['#64748b', '#2563eb', '#7c3aed', '#16a34a', '#dc2626'];
+        const colors = ['#0C231C', '#57A883', '#7c3aed', '#16a34a', '#dc2626'];
         const ctx = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
@@ -447,7 +447,7 @@
         }
         const max = Math.max(1, ...rows.flatMap(row => statuses.map(status => row.counts[status] || 0)));
         statuses.forEach((status, statusIndex) => {
-          ctx.strokeStyle = colors[statusIndex] || '#2c5282';
+          ctx.strokeStyle = colors[statusIndex] || '#1D4735';
           ctx.lineWidth = 2;
           ctx.beginPath();
           rows.forEach((row, index) => {

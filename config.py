@@ -4,14 +4,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    ENV = os.environ.get('FLASK_ENV') or os.environ.get('APP_ENV') or 'development'
+    IS_PRODUCTION = ENV.lower() in {'production', 'prod'}
+
     SECRET_KEY = os.environ.get('SECRET_KEY')
     if not SECRET_KEY:
-        raise RuntimeError('SECRET_KEY must be set in the environment.')
+        if IS_PRODUCTION:
+            raise RuntimeError('SECRET_KEY must be set in the environment for production.')
+        SECRET_KEY = 'dev-only-change-me'
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
     
-    # PostgreSQL
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://postgres:@localhost:5432/ats'
+    # Use local SQLite by default so a fresh clone can start without PostgreSQL.
+    SQLALCHEMY_DATABASE_URI = (
+        os.environ.get('DATABASE_URL') or 'sqlite:///ats.db'
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Flask-Login
@@ -28,4 +34,8 @@ class Config:
     EMAIL_VERIFICATION_TOKEN_MAX_AGE = int(os.environ.get('EMAIL_VERIFICATION_TOKEN_MAX_AGE', '86400'))
     MFA_REQUIRED = os.environ.get('MFA_REQUIRED', 'true').lower() in {'1', 'true', 'yes', 'on'}
     MFA_TOKEN_MAX_AGE = int(os.environ.get('MFA_TOKEN_MAX_AGE', '600'))
+
+    # Restrict employee self-registration to a specific email domain (e.g. '@yourcompany.com').
+    # Leave unset to allow any email domain -- each deployment/client sets its own via .env.
+    ALLOWED_EMPLOYEE_EMAIL_DOMAIN = (os.environ.get('ALLOWED_EMPLOYEE_EMAIL_DOMAIN') or '').strip().lower() or None
 

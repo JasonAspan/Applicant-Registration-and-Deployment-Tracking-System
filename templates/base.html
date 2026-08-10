@@ -9,9 +9,6 @@
 </head>
 <body>
   <div class="container {% block container_class %}{% endblock %}">
-    <div class="brand-header">
-      <img src="{{ url_for('static', filename='img/company-logo.png') }}" class="company-logo" alt="Company logo">
-    </div>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}

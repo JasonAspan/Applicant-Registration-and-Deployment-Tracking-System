@@ -46,7 +46,7 @@
     min-height: 100vh;
     padding: 22px 30px 34px;
     background: rgba(255, 255, 255, 0.66);
-    color: #23176c;
+    color: #0C231C;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -55,21 +55,21 @@
   }
 
   .employee-auth-brand {
-    width: min(540px, 92%);
-    margin: 0 auto 30px;
+    width: min(610px, 100%);
+    margin: 0 auto 18px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #2F6F58;
+    text-align: left;
     animation: authFadeFront 0.64s ease-out 0.12s both;
-  }
-
-  .employee-auth-brand img {
-    width: 100%;
-    height: auto;
-    display: block;
   }
 
   .employee-auth-intro h1 {
     width: min(610px, 100%);
     margin: 0 0 8px;
-    color: #24186d;
+    color: #0C231C;
     font-size: 60px;
     font-weight: 400;
     line-height: 0.94;
@@ -79,7 +79,7 @@
 
   .employee-auth-subtitle {
     margin: 0 0 8px;
-    color: #24186d;
+    color: #0C231C;
     font-size: 27px;
     font-weight: 400;
     line-height: 1.15;
@@ -89,7 +89,7 @@
   .employee-auth-lead {
     width: min(600px, 100%);
     margin: 0 auto 14px;
-    color: #24186d;
+    color: #0C231C;
     font-size: 21px;
     font-weight: 800;
     line-height: 1.14;
@@ -99,7 +99,7 @@
   .employee-auth-copy {
     width: min(600px, 100%);
     margin: 0 auto 14px;
-    color: #24186d;
+    color: #0C231C;
     font-size: 24px;
     font-weight: 400;
     line-height: 1.08;
@@ -109,7 +109,7 @@
   .employee-auth-closing {
     width: min(540px, 100%);
     margin: 0 auto;
-    color: #24186d;
+    color: #0C231C;
     font-size: 23px;
     font-weight: 400;
     line-height: 1.12;
@@ -127,13 +127,13 @@
   .employee-auth-card {
     width: min(514px, 100%);
     padding: 38px 46px 38px;
-    background: #25275c;
+    background: #123027;
     border-radius: 18px;
     display: flex;
     flex-direction: column;
     align-items: center;
     color: white;
-    box-shadow: 0 22px 60px rgba(16, 17, 48, 0.36);
+    box-shadow: 0 22px 60px rgba(4, 15, 11, 0.36);
     animation: authFadeFront 0.72s ease-out 0.22s both;
   }
 
@@ -164,8 +164,8 @@
     height: 48px;
     transform: translateX(-50%);
     border-radius: 50%;
-    background: #25275c;
-    box-shadow: 0 55px 0 22px #25275c;
+    background: #123027;
+    box-shadow: 0 55px 0 22px #123027;
   }
 
   .employee-auth-heading {
@@ -207,7 +207,7 @@
     border: 2px solid #050505;
     border-radius: 8px;
     background: white;
-    color: #25275c;
+    color: #123027;
     font-size: 16px;
     font-weight: 700;
     outline: none;
@@ -229,8 +229,8 @@
     height: 36px;
     border: 0;
     border-radius: 6px;
-    background: #eef3f6;
-    color: #25275c;
+    background: #EFF6F2;
+    color: #123027;
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
@@ -256,7 +256,7 @@
     min-height: 58px;
     margin-top: 4px;
     background: white;
-    color: #25275c;
+    color: #123027;
     border: 0;
     border-radius: 8px;
     font-size: 20px;
@@ -267,7 +267,7 @@
   }
 
   .employee-auth-card .btn:hover {
-    background: #eef3f6;
+    background: #EFF6F2;
   }
 
   .employee-auth-link {
@@ -380,7 +380,7 @@
       top: 19px;
       width: 42px;
       height: 42px;
-      box-shadow: 0 48px 0 18px #25275c;
+      box-shadow: 0 48px 0 18px #123027;
     }
   }
 </style>
@@ -388,14 +388,12 @@
 
 {% block content %}
   <section class="employee-auth-intro" aria-label="Recruitment portal introduction">
-    <div class="employee-auth-brand">
-      <img src="{{ url_for('static', filename='img/company-logo.png') }}" alt="Caves Treasures Manpower and Construction Corporation">
-    </div>
-    <h1>Your trusted Manpower Recruitment Agency</h1>
-    <p class="employee-auth-subtitle">With over 20 years of experience in the industry</p>
-    <p class="employee-auth-lead">Welcome to the Recruitment Management Portal of Caves Treasures Manpower &amp; Construction Corporation!</p>
-    <p class="employee-auth-copy">This platform is designed to support efficient applicant processing, job request management, and recruitment coordination. Please follow company compliance guidelines and maintain the confidentiality of applicant information at all times.</p>
-    <p class="employee-auth-closing">Together, let us continue delivering professional and reliable recruitment services.</p>
+    <p class="employee-auth-brand">Applicant Registration and Deployment Tracking System</p>
+    <h1>Your trusted Recruitment Partner</h1>
+    <p class="employee-auth-subtitle">Streamlined recruitment and deployment management</p>
+    <p class="employee-auth-lead">Welcome to your Recruitment Management Portal!</p>
+    <p class="employee-auth-copy">This platform supports efficient applicant processing, job request management, and recruitment coordination. Please follow your organization's compliance guidelines and maintain the confidentiality of applicant information at all times.</p>
+    <p class="employee-auth-closing">Manage your recruitment pipeline from application to deployment, all in one place.</p>
   </section>
 
   <section class="employee-auth-panel" aria-label="Employee login form">
