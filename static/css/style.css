@@ -332,7 +332,7 @@ body {
 }
 
 .refresh-btn {
-  color: #2F6F58;
+  color: white;
 }
 
 .delete-btn {
@@ -520,15 +520,6 @@ body {
   padding: 40px 20px;
   text-align: center;
   color: #718096;
-}
-
-.filter-wrap {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-top: none;
-  padding: 20px;
-  border-radius: 0 0 8px 8px;
-  margin-bottom: 20px;
 }
 
 .filter-dropdown {

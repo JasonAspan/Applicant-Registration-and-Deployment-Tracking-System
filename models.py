@@ -146,6 +146,7 @@ class Applicant(db.Model):
     contract_end_date = db.Column(db.Date)
     deployment_status = db.Column(db.String(30))
     deployment_remarks = db.Column(db.Text)
+    deployment_updated_at = db.Column(db.DateTime)
 
     remarked_by = db.relationship('Employee', foreign_keys=[remarked_by_id], backref='remarked_applicants')
     deleted_by = db.relationship('Employee', foreign_keys=[deleted_by_id])

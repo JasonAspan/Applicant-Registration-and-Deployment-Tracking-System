@@ -60,7 +60,7 @@ ROLE_PERMISSIONS = {
     'ADMIN': [
         'view_applicants', 'edit_applicant', 'export_applicant_cv', 'export_applicant_excel',
         'forward_applicant', 'manage_positions', 'view_positions', 'view_users',
-        'view_dashboard',
+        'view_dashboard', 'access_admin_panel',
         'view_deployed_applicants', 'manage_deployed_applicants'
     ],
     'LEVEL_3_USER': [

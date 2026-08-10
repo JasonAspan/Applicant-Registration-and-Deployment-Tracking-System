@@ -17,6 +17,7 @@ from flask import (
 )
 from flask_login import login_user, logout_user, current_user, login_required
 from models import db, Employee, Role
+from auth_rbac import has_permission
 from email_verification import is_invalid_or_expired_token, send_mfa_code, verify_email_verification_token
 from rbac_middleware import enforce_first_login_password_reset, log_permission_action
 from time_utils import ph_now
@@ -62,6 +63,13 @@ def _complete_login(user, remember):
         return redirect(url_for('reset_password_first_login'))
 
     flash(f'Welcome back, {user.username}!', 'success')
+
+    if has_permission(user, 'access_admin_panel'):
+        return redirect(url_for('admin_panel'))
+
+    if not has_permission(user, 'view_applicants') and has_permission(user, 'view_deployed_applicants'):
+        return redirect(url_for('deployed_applicants'))
+
     return redirect(url_for('dashboard'))
 
 

@@ -165,6 +165,9 @@ def ensure_db_schema():
         if 'deployment_remarks' not in cols:
             db.session.execute(text('ALTER TABLE applicant ADD COLUMN deployment_remarks TEXT'))
             db.session.commit()
+        if 'deployment_updated_at' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN deployment_updated_at DATETIME'))
+            db.session.commit()
 
         applicant_cols_by_name = {c['name']: c for c in inspector.get_columns('applicant')}
         resume_col = applicant_cols_by_name.get('resume')

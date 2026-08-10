@@ -7,6 +7,9 @@ import pytest
 def app(tmp_path, monkeypatch):
     monkeypatch.setenv('SECRET_KEY', 'test-secret')
     monkeypatch.setenv('DATABASE_URL', f'sqlite:///{tmp_path / "test.db"}')
+    # Keep tests hermetic regardless of a developer's local .env overrides.
+    monkeypatch.setenv('EMAIL_VERIFICATION_REQUIRED', 'true')
+    monkeypatch.setenv('MFA_REQUIRED', 'true')
 
     from ats_app import create_app
 
@@ -144,7 +147,7 @@ def test_superadmin_login_skips_mfa(app, client, monkeypatch):
     })
 
     assert response.status_code == 302
-    assert response.headers['Location'].endswith('/dashboard.html')
+    assert response.headers['Location'].endswith('/admin-panel.html')
 
     with client.session_transaction() as session:
         assert session['_user_id'] == str(admin_id)

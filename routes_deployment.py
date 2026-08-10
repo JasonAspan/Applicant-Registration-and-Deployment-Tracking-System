@@ -3,9 +3,10 @@ from io import BytesIO
 
 from flask import flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 
-from models import Applicant, ApplicantDocument, db
+from models import Applicant, ApplicantDocument, Employee, db
 from auth_rbac import has_permission
 from time_utils import ph_now
 
@@ -85,20 +86,76 @@ def register_deployment_routes(app):
             flash('You do not have permission to view deployed applicants.', 'error')
             return redirect(url_for('employee_home'))
 
-        applicants = (
-            Applicant.query
-            .filter_by(status='Deployed', is_deleted=False)
-            .order_by(Applicant.deployed_at.desc())
-            .all()
-        )
+        filters = {
+            'q': (request.args.get('q') or '').strip(),
+            'employer': (request.args.get('employer') or '').strip(),
+            'job_position': (request.args.get('job_position') or '').strip(),
+            'status': (request.args.get('status') or '').strip(),
+            'recruiter_id': (request.args.get('recruiter_id') or '').strip(),
+            'date_from': (request.args.get('date_from') or '').strip(),
+            'date_to': (request.args.get('date_to') or '').strip(),
+        }
+
+        query = Applicant.query.filter_by(status='Deployed', is_deleted=False)
+
+        if filters['q']:
+            like = f"%{filters['q']}%"
+            query = query.filter(or_(
+                Applicant.first_name.ilike(like),
+                Applicant.last_name.ilike(like),
+                Applicant.middle_initial.ilike(like),
+                Applicant.contact_number.ilike(like),
+                Applicant.email.ilike(like),
+            ))
+        if filters['employer']:
+            query = query.filter(Applicant.employer_name.ilike(f"%{filters['employer']}%"))
+        if filters['job_position']:
+            query = query.filter(Applicant.job_position == filters['job_position'])
+        if filters['status']:
+            if filters['status'] == 'Deployed':
+                query = query.filter(or_(Applicant.deployment_status == 'Deployed', Applicant.deployment_status.is_(None)))
+            else:
+                query = query.filter(Applicant.deployment_status == filters['status'])
+        if filters['recruiter_id']:
+            query = query.filter(Applicant.deployed_by_id == filters['recruiter_id'])
+        date_from = parse_date(filters['date_from'])
+        if date_from:
+            query = query.filter(Applicant.deployed_at >= datetime.combine(date_from, datetime.min.time()))
+        date_to = parse_date(filters['date_to'])
+        if date_to:
+            query = query.filter(Applicant.deployed_at <= datetime.combine(date_to, datetime.max.time()))
+
+        applicants = query.order_by(Applicant.deployed_at.desc()).all()
         rows = [(applicant, contract_state(applicant)) for applicant in applicants]
         can_manage = has_permission(current_user, 'manage_deployed_applicants')
+
+        job_positions = [
+            r[0] for r in Applicant.query
+            .filter_by(status='Deployed', is_deleted=False)
+            .with_entities(Applicant.job_position)
+            .distinct()
+            .order_by(Applicant.job_position.asc())
+            .all()
+            if r[0]
+        ]
+        recruiters = (
+            Employee.query
+            .join(Applicant, Applicant.deployed_by_id == Employee.id)
+            .filter(Applicant.status == 'Deployed', Applicant.is_deleted == False)
+            .distinct()
+            .order_by(Employee.username.asc())
+            .all()
+        )
 
         return render_template(
             'deployed_applicants.html',
             rows=rows,
             can_manage=can_manage,
             deployment_statuses=DEPLOYMENT_STATUSES,
+            filters=filters,
+            job_positions=job_positions,
+            recruiters=recruiters,
+            can_view_recruitment_dashboard=has_permission(current_user, 'view_applicants'),
         )
 
     @app.route('/deployed-applicants/<int:applicant_id>/update', methods=['POST'])
@@ -121,6 +178,7 @@ def register_deployment_routes(app):
         applicant.contract_end_date = parse_date(request.form.get('contract_end_date'))
         applicant.deployment_status = deployment_status or None
         applicant.deployment_remarks = (request.form.get('deployment_remarks') or '').strip() or None
+        applicant.deployment_updated_at = ph_now()
 
         db.session.commit()
         flash('Deployment details updated.', 'success')

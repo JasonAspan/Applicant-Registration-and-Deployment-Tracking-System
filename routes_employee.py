@@ -778,7 +778,6 @@ def register_employee_routes(app):
 
         return render_template(
             'profile.html',
-            is_profile_page=True,
             role_name=role_name,
             role_label=role_labels.get(role_name, role_name.replace('_', ' ').title()),
             role_description=role_descriptions.get(role_name, 'Role-based access profile.'),
@@ -902,7 +901,6 @@ def register_employee_routes(app):
             page=page,
             total_pages=total_pages,
             total_count=total_count,
-            is_profile_page=False,
             can_forward_applicants=can_forward_applicants,
             can_delete_applicants=can_delete_applicants,
             can_export_applicant_cv=can_export_applicant_cv,
@@ -1258,4 +1256,4 @@ def register_employee_routes(app):
     @require_permission('access_admin_panel')
     def admin_panel():
         """RBAC Admin Panel - requires access_admin_panel permission"""
-        return render_template('admin_panel.html', is_admin_page=True)
+        return render_template('admin_panel.html')

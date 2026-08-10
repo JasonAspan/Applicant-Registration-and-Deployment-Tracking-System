@@ -127,7 +127,7 @@
           <h1>{{ current_user.username }}</h1>
           <p>{{ current_user.email }}</p>
         </div>
-        <a class="profile-action secondary" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="profile-action secondary" href="{{ url_for('dashboard') }}">Recruitment Dashboard</a>
       </div>
 
       <div class="analytics-summary-grid">
@@ -242,7 +242,7 @@
       </div>
 
       <div class="profile-actions">
-        <a class="profile-action secondary" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="profile-action secondary" href="{{ url_for('dashboard') }}">Recruitment Dashboard</a>
         {% if has_permission(current_user, 'access_admin_panel') %}
           <a class="profile-action" href="{{ url_for('admin_panel') }}">Admin Panel</a>
         {% endif %}

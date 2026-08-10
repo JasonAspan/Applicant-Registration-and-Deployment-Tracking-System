@@ -262,7 +262,6 @@ def register_rbac_routes(app):
         user = Employee.query.filter_by(id=user_id, is_deleted=False).first_or_404()
         return render_template(
             'admin_user_profile.html',
-            is_admin_page=True,
             profile=_admin_user_profile_payload(user),
         )
 
