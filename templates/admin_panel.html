@@ -929,7 +929,7 @@
   const canViewPositions = {{ 'true' if has_permission(current_user, 'view_positions') else 'false' }};
   const canManagePositions = {{ 'true' if has_permission(current_user, 'manage_positions') else 'false' }};
   const isSuperAdmin = {{ 'true' if current_user.role_obj and current_user.role_obj.name == 'SUPER_ADMIN' else 'false' }};
-  const roleOrder = ['LEVEL_1_USER', 'LEVEL_2_USER', 'ADMIN', 'SUPER_ADMIN'];
+  const roleOrder = ['LEVEL_1_USER', 'LEVEL_2_USER', 'LEVEL_3_USER', 'ADMIN', 'SUPER_ADMIN'];
   let users = [];
   let roles = [];
   let permissionsByCategory = {};

@@ -40,6 +40,10 @@ PERMISSION_KEYS = {
     # Administrative
     'manage_roles': 'Create/modify roles',
     'access_admin_panel': 'Access super admin panel',
+
+    # Deployment tracking
+    'view_deployed_applicants': 'View the deployed applicants tracking page',
+    'manage_deployed_applicants': 'Manage deployment status, remarks, and government documents for deployed applicants',
 }
 
 # Role definitions with default permissions
@@ -50,12 +54,17 @@ ROLE_PERMISSIONS = {
         'manage_positions', 'view_positions',
         'manage_users', 'manage_permissions', 'view_users',
         'view_dashboard', 'manage_dashboard',
-        'manage_roles', 'access_admin_panel'
+        'manage_roles', 'access_admin_panel',
+        'view_deployed_applicants', 'manage_deployed_applicants'
     ],
     'ADMIN': [
         'view_applicants', 'edit_applicant', 'export_applicant_cv', 'export_applicant_excel',
         'forward_applicant', 'manage_positions', 'view_positions', 'view_users',
-        'view_dashboard'
+        'view_dashboard',
+        'view_deployed_applicants', 'manage_deployed_applicants'
+    ],
+    'LEVEL_3_USER': [
+        'view_dashboard', 'view_deployed_applicants', 'manage_deployed_applicants'
     ],
     'LEVEL_2_USER': [
         'view_applicants', 'export_applicant_cv', 'export_applicant_excel',

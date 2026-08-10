@@ -1,0 +1,189 @@
+{% extends "base_employee.html" %}
+
+{% block title %}Documents - {{ applicant.full_name }} - ATS{% endblock %}
+
+{% block container_class %}dashboard-container{% endblock %}
+
+{% block extra_css %}
+<style>
+  .doc-back-link {
+    display: inline-block;
+    margin-bottom: 14px;
+    color: #2F6F58;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .doc-back-link:hover {
+    text-decoration: underline;
+  }
+  .doc-applicant-summary {
+    background: #FAF9F5;
+    border: 1px solid #DCEBE3;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+  .doc-applicant-summary h3 {
+    margin: 0 0 4px;
+    color: #123027;
+  }
+  .doc-applicant-summary p {
+    margin: 0;
+    color: #4a5568;
+    font-size: 13px;
+  }
+  .doc-upload-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    margin-bottom: 22px;
+    padding: 14px 18px;
+    border: 1px dashed #A8CFBE;
+    border-radius: 10px;
+  }
+  .doc-upload-form .form-group {
+    margin-bottom: 0;
+  }
+  .doc-upload-form label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #4a5568;
+  }
+  .doc-upload-form input[type="text"],
+  .doc-upload-form input[type="file"] {
+    padding: 7px 9px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .doc-table-wrap {
+    overflow-x: auto;
+  }
+  .doc-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .doc-table th, .doc-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+  }
+  .doc-table th {
+    color: #123027;
+    font-weight: 700;
+  }
+  .doc-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .doc-actions form {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .doc-actions input[type="text"] {
+    padding: 5px 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 5px;
+    font-size: 12px;
+    width: 110px;
+  }
+  .doc-actions .btn-link {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .doc-actions .btn-download {
+    background: #2F6F58;
+    color: white;
+  }
+  .doc-actions .btn-save {
+    background: #E0A72E;
+    color: #123027;
+  }
+  .doc-actions .btn-delete {
+    background: #f2d7dc;
+    color: #842032;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <a class="doc-back-link" href="{{ url_for('deployed_applicants') }}">&larr; Back to Deployed Applicants</a>
+
+  <div class="doc-applicant-summary">
+    <h3>{{ applicant.full_name }}</h3>
+    <p>{{ applicant.job_position }}{% if applicant.employer_name %} &middot; {{ applicant.employer_name }}{% endif %}{% if applicant.deployment_country %} &middot; {{ applicant.deployment_country }}{% endif %}</p>
+  </div>
+
+  {% if can_manage %}
+  <form class="doc-upload-form" method="POST" action="{{ url_for('upload_deployment_document', applicant_id=applicant.id) }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+      <label>Label (optional)</label>
+      <input type="text" name="label" placeholder="e.g. Passport">
+    </div>
+    <div class="form-group">
+      <label>File(s)</label>
+      <input type="file" name="documents" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+    </div>
+    <button type="submit" class="btn" style="width:auto; padding:9px 20px;">Upload</button>
+  </form>
+  {% endif %}
+
+  <div class="doc-table-wrap">
+    {% if documents %}
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Filename</th>
+          <th>Uploaded By</th>
+          <th>Uploaded At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for document in documents %}
+        <tr>
+          <td>{{ document.label or document.filename }}</td>
+          <td>{{ document.filename }}</td>
+          <td>{{ document.uploaded_by.username if document.uploaded_by else '-' }}</td>
+          <td>{{ document.uploaded_at.strftime('%m/%d/%Y %H:%M') if document.uploaded_at else '-' }}</td>
+          <td class="doc-actions">
+            <a class="btn-link btn-download" href="{{ url_for('download_deployment_document', applicant_id=applicant.id, document_id=document.id) }}">Download</a>
+            {% if can_manage %}
+            <form method="POST" action="{{ url_for('edit_deployment_document', applicant_id=applicant.id, document_id=document.id) }}" enctype="multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="text" name="label" placeholder="Rename" value="{{ document.label or '' }}">
+              <input type="file" name="replacement" style="width:120px;">
+              <button type="submit" class="btn-link btn-save">Save</button>
+            </form>
+            <form method="POST" action="{{ url_for('delete_deployment_document', applicant_id=applicant.id, document_id=document.id) }}" onsubmit="return confirm('Delete this document?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-link btn-delete">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>No documents uploaded yet.</p>
+    </div>
+    {% endif %}
+  </div>
+{% endblock %}

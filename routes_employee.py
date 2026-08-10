@@ -990,6 +990,9 @@ def register_employee_routes(app):
             return redirect(request.referrer or url_for('dashboard'))
 
         applicant.status = status
+        if status == 'Deployed':
+            applicant.deployed_by_id = current_user.id
+            applicant.deployed_at = ph_now()
         db.session.commit()
         flash('Applicant status updated.', 'success')
         return redirect(request.referrer or url_for('dashboard'))

@@ -224,8 +224,8 @@ def can_edit_user(target_user):
         return True
     
     if current_role.name == 'ADMIN':
-        # ADMIN can only edit LEVEL_1 and LEVEL_2 users
-        if target_role.name in ['LEVEL_1_USER', 'LEVEL_2_USER']:
+        # ADMIN can only edit LEVEL_1, LEVEL_2, and LEVEL_3 users
+        if target_role.name in ['LEVEL_1_USER', 'LEVEL_2_USER', 'LEVEL_3_USER']:
             return True
     
     return False

@@ -320,7 +320,7 @@ def register_rbac_routes(app):
             target_role = Role.query.get(user.role_id)
             admin_role = Role.query.get(current_user.role_id)
             
-            if admin_role.name == 'SUPER_ADMIN' or target_role.name in ['LEVEL_1_USER', 'LEVEL_2_USER']:
+            if admin_role.name == 'SUPER_ADMIN' or target_role.name in ['LEVEL_1_USER', 'LEVEL_2_USER', 'LEVEL_3_USER']:
                 user.is_active = data['is_active']
         
         # Update role (SUPER_ADMIN only)

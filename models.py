@@ -137,8 +137,19 @@ class Applicant(db.Model):
     deleted_at = db.Column(db.DateTime)
     deleted_by_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
 
+    # Deployment tracking (populated once status is set to 'Deployed')
+    deployed_by_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    deployed_at = db.Column(db.DateTime)
+    employer_name = db.Column(db.String(150))
+    deployment_country = db.Column(db.String(100))
+    contract_start_date = db.Column(db.Date)
+    contract_end_date = db.Column(db.Date)
+    deployment_status = db.Column(db.String(30))
+    deployment_remarks = db.Column(db.Text)
+
     remarked_by = db.relationship('Employee', foreign_keys=[remarked_by_id], backref='remarked_applicants')
     deleted_by = db.relationship('Employee', foreign_keys=[deleted_by_id])
+    deployed_by = db.relationship('Employee', foreign_keys=[deployed_by_id])
 
     # password_hash is currently unused (applicants do not log in)
 
@@ -151,6 +162,26 @@ class Applicant(db.Model):
 
     def __repr__(self):
         return f'<Applicant {self.full_name or self.first_name}>'
+
+
+class ApplicantDocument(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    applicant_id = db.Column(db.Integer, db.ForeignKey('applicant.id'), nullable=False, index=True)
+    label = db.Column(db.String(150))
+    filename = db.Column(db.String(255), nullable=False)
+    content_type = db.Column(db.String(100))
+    data = db.Column(db.LargeBinary, nullable=False)
+    uploaded_by_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    uploaded_at = db.Column(db.DateTime, default=ph_now)
+
+    applicant = db.relationship(
+        'Applicant',
+        backref=db.backref('documents', lazy='dynamic', order_by='ApplicantDocument.uploaded_at.desc()')
+    )
+    uploaded_by = db.relationship('Employee')
+
+    def __repr__(self):
+        return f'<ApplicantDocument {self.filename}>'
 
 
 class ProfileTodo(db.Model):

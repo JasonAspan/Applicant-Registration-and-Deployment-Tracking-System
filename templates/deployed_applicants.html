@@ -1,0 +1,197 @@
+{% extends "base_employee.html" %}
+
+{% block title %}Deployed Applicants - ATS{% endblock %}
+
+{% block container_class %}dashboard-container{% endblock %}
+
+{% block extra_css %}
+<style>
+  .contract-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .contract-badge.active {
+    background: #DCEBE3;
+    color: #123027;
+  }
+  .contract-badge.ended {
+    background: #f2d7dc;
+    color: #842032;
+  }
+  .contract-badge.none {
+    background: #e2e8f0;
+    color: #4a5568;
+  }
+  .contract-dates {
+    display: block;
+    font-size: 11px;
+    color: #4a5568;
+    margin-top: 4px;
+  }
+  .deployment-edit-row td {
+    background: #FAF9F5;
+    padding: 14px 12px 18px;
+  }
+  .deployment-edit-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px 14px;
+    align-items: end;
+  }
+  .deployment-edit-form .form-group {
+    margin-bottom: 0;
+  }
+  .deployment-edit-form label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #4a5568;
+  }
+  .deployment-edit-form input,
+  .deployment-edit-form select,
+  .deployment-edit-form textarea {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .deployment-edit-form textarea {
+    min-height: 42px;
+    resize: vertical;
+  }
+  .deployment-recruiter {
+    font-size: 12px;
+    color: #4a5568;
+    grid-column: 1 / -1;
+  }
+  .deployment-edit-form .form-actions-inline {
+    grid-column: 1 / -1;
+    text-align: right;
+  }
+  .documents-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    background: #2F6F58;
+    color: white;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .documents-link:hover {
+    background: #255943;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="dashboard-header-bar">
+    <div class="dashboard-header-left">
+      <h2>Deployed Applicants</h2>
+    </div>
+  </div>
+
+  {% if rows %}
+    <div class="dashboard-table-scroll">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Applicant Name</th>
+            <th>Deployed Date</th>
+            <th>Employer</th>
+            <th>Country</th>
+            <th>Job Position</th>
+            <th>Contract Duration</th>
+            <th>Documents</th>
+            <th>Recruiter</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for applicant, state in rows %}
+          <tr>
+            <td>{{ applicant.full_name }}</td>
+            <td>{{ applicant.deployed_at.strftime('%m/%d/%Y') if applicant.deployed_at else '-' }}</td>
+            <td>{{ applicant.employer_name or '-' }}</td>
+            <td>{{ applicant.deployment_country or '-' }}</td>
+            <td>{{ applicant.job_position }}</td>
+            <td>
+              {% if state == 'ended' %}
+                <span class="contract-badge ended">Ended</span>
+              {% elif state == 'active' %}
+                <span class="contract-badge active">Active</span>
+              {% else %}
+                <span class="contract-badge none">Not set</span>
+              {% endif %}
+              {% if applicant.contract_start_date or applicant.contract_end_date %}
+                <span class="contract-dates">
+                  {{ applicant.contract_start_date.strftime('%m/%d/%Y') if applicant.contract_start_date else '?' }}
+                  &ndash;
+                  {{ applicant.contract_end_date.strftime('%m/%d/%Y') if applicant.contract_end_date else '?' }}
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <a class="documents-link" href="{{ url_for('deployment_documents', applicant_id=applicant.id) }}">Open Folder</a>
+            </td>
+            <td>{{ applicant.deployed_by.username if applicant.deployed_by else '-' }}</td>
+          </tr>
+          {% if can_manage %}
+          <tr class="deployment-edit-row">
+            <td colspan="8">
+              <form method="POST" action="{{ url_for('update_deployment_details', applicant_id=applicant.id) }}" class="deployment-edit-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                  <label>Employer Name</label>
+                  <input type="text" name="employer_name" value="{{ applicant.employer_name or '' }}">
+                </div>
+                <div class="form-group">
+                  <label>Country</label>
+                  <input type="text" name="deployment_country" value="{{ applicant.deployment_country or '' }}">
+                </div>
+                <div class="form-group">
+                  <label>Contract Start</label>
+                  <input type="date" name="contract_start_date" value="{{ applicant.contract_start_date.isoformat() if applicant.contract_start_date else '' }}">
+                </div>
+                <div class="form-group">
+                  <label>Contract End</label>
+                  <input type="date" name="contract_end_date" value="{{ applicant.contract_end_date.isoformat() if applicant.contract_end_date else '' }}">
+                </div>
+                <div class="form-group">
+                  <label>Status</label>
+                  <select name="deployment_status">
+                    {% for status in deployment_statuses %}
+                      <option value="{{ status }}" {% if applicant.deployment_status == status or (not applicant.deployment_status and status == 'Deployed') %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Remarks</label>
+                  <textarea name="deployment_remarks">{{ applicant.deployment_remarks or '' }}</textarea>
+                </div>
+                <div class="deployment-recruiter">Recruiter: {{ applicant.deployed_by.username if applicant.deployed_by else 'Unknown' }}</div>
+                <div class="form-actions-inline">
+                  <button type="submit" class="btn" style="width:auto; padding:8px 22px;">Save</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No deployed applicants yet.</p>
+    </div>
+  {% endif %}
+{% endblock %}

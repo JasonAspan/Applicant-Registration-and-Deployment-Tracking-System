@@ -50,6 +50,9 @@
               {% if has_permission(current_user, 'access_admin_panel') %}
                 <a href="{{ url_for('admin_panel') }}">Admin Panel</a>
               {% endif %}
+              {% if has_permission(current_user, 'view_deployed_applicants') %}
+                <a href="{{ url_for('deployed_applicants') }}">Deployed Applicants</a>
+              {% endif %}
               <a href="{{ url_for('logout') }}">Logout</a>
             {% else %}
               <a href="{{ url_for('employee_login') }}">Employee Login</a>

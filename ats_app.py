@@ -141,6 +141,30 @@ def ensure_db_schema():
         if 'deleted_by_id' not in cols:
             db.session.execute(text('ALTER TABLE applicant ADD COLUMN deleted_by_id INTEGER'))
             db.session.commit()
+        if 'deployed_by_id' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN deployed_by_id INTEGER'))
+            db.session.commit()
+        if 'deployed_at' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN deployed_at DATETIME'))
+            db.session.commit()
+        if 'employer_name' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN employer_name VARCHAR(150)'))
+            db.session.commit()
+        if 'deployment_country' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN deployment_country VARCHAR(100)'))
+            db.session.commit()
+        if 'contract_start_date' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN contract_start_date DATE'))
+            db.session.commit()
+        if 'contract_end_date' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN contract_end_date DATE'))
+            db.session.commit()
+        if 'deployment_status' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN deployment_status VARCHAR(30)'))
+            db.session.commit()
+        if 'deployment_remarks' not in cols:
+            db.session.execute(text('ALTER TABLE applicant ADD COLUMN deployment_remarks TEXT'))
+            db.session.commit()
 
         applicant_cols_by_name = {c['name']: c for c in inspector.get_columns('applicant')}
         resume_col = applicant_cols_by_name.get('resume')
@@ -261,6 +285,9 @@ def create_app(*, enable_applicant: bool, enable_employee: bool, root_redirect: 
 
         from routes_positions import register_positions_routes
         register_positions_routes(app)
+
+        from routes_deployment import register_deployment_routes
+        register_deployment_routes(app)
 
     init_rbac_middleware(app)
 

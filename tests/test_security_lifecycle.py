@@ -1020,3 +1020,123 @@ def test_only_superadmin_can_compose_announcements(app, client):
     assert allowed_panel.status_code == 200
     assert b'Compose Announcement' in allowed_panel.data
     assert b'id="createAnnouncementForm"' in allowed_panel.data
+
+
+def test_marking_applicant_deployed_captures_recruiter(app, client):
+    from models import Applicant, Position, db
+    from time_utils import ph_now
+
+    with app.app_context():
+        user = create_user('deploy_recruiter', 'LEVEL_1_USER')
+        position = Position(title='Deploy Tester', is_active=True)
+        position.assigned_employees.append(user)
+        db.session.add(position)
+        db.session.flush()
+        applicant = Applicant(
+            first_name='Deploy',
+            last_name='Candidate',
+            age=30,
+            birth_date=ph_now(),
+            gender='Other',
+            contact_number='1234567890',
+            email='deploy-candidate@example.test',
+            job_position=position.title,
+            employee_id=user.id,
+            status='OPEN',
+        )
+        db.session.add(applicant)
+        db.session.commit()
+        applicant_id = applicant.id
+        user_id = user.id
+        login(client, user)
+
+    client.post(f'/applicants/{applicant_id}/remark')
+    response = client.post(f'/applicants/{applicant_id}/status', data={'status': 'Deployed'})
+    assert response.status_code == 302
+
+    with app.app_context():
+        applicant = Applicant.query.get(applicant_id)
+        assert applicant.status == 'Deployed'
+        assert applicant.deployed_by_id == user_id
+        assert applicant.deployed_at is not None
+
+
+def test_level_3_user_can_view_and_manage_deployed_applicants(app, client):
+    from models import Applicant, ApplicantDocument, db
+    from time_utils import ph_now
+
+    with app.app_context():
+        recruiter = create_user('deploy_original_recruiter', 'LEVEL_1_USER')
+        level3 = create_user('deploy_level3', 'LEVEL_3_USER')
+        applicant = Applicant(
+            first_name='Deployed',
+            last_name='Worker',
+            age=28,
+            birth_date=ph_now(),
+            gender='Other',
+            contact_number='1234567890',
+            email='deployed-worker@example.test',
+            job_position='Welder',
+            employee_id=recruiter.id,
+            status='Deployed',
+            deployed_by_id=recruiter.id,
+            deployed_at=ph_now(),
+        )
+        db.session.add(applicant)
+        db.session.commit()
+        applicant_id = applicant.id
+        login(client, level3)
+
+    page_response = client.get('/deployed-applicants.html')
+    assert page_response.status_code == 200
+    assert b'Deployed Worker' in page_response.data
+    assert b'deploy_original_recruiter' in page_response.data
+
+    update_response = client.post(
+        f'/deployed-applicants/{applicant_id}/update',
+        data={
+            'employer_name': 'Acme Corp',
+            'deployment_country': 'Qatar',
+            'contract_start_date': '2026-01-01',
+            'contract_end_date': '2026-12-31',
+            'deployment_status': 'Deployed',
+            'deployment_remarks': 'On track',
+        },
+    )
+    assert update_response.status_code == 302
+
+    with app.app_context():
+        applicant = Applicant.query.get(applicant_id)
+        assert applicant.employer_name == 'Acme Corp'
+        assert applicant.deployment_country == 'Qatar'
+
+    upload_response = client.post(
+        f'/deployed-applicants/{applicant_id}/documents/upload',
+        data={'documents': (io.BytesIO(b'%PDF test document'), 'passport.pdf')},
+        content_type='multipart/form-data',
+    )
+    assert upload_response.status_code == 302
+
+    with app.app_context():
+        document = ApplicantDocument.query.filter_by(applicant_id=applicant_id).one()
+        document_id = document.id
+
+    download_response = client.get(f'/deployed-applicants/{applicant_id}/documents/{document_id}/download')
+    assert download_response.status_code == 200
+    assert download_response.data == b'%PDF test document'
+
+
+def test_level_1_and_level_2_users_denied_deployed_applicants_page(app, client):
+    with app.app_context():
+        level1 = create_user('deploy_denied_level1', 'LEVEL_1_USER')
+        login(client, level1)
+
+    response = client.get('/deployed-applicants.html')
+    assert response.status_code == 302
+
+    with app.app_context():
+        level2 = create_user('deploy_denied_level2', 'LEVEL_2_USER')
+        login(client, level2)
+
+    response = client.get('/deployed-applicants.html')
+    assert response.status_code == 302
